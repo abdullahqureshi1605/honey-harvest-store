@@ -80,12 +80,75 @@
         .payment-details-section {
             display: none; /* Hidden by default */
         }
+
+        /* Message Modal Styles */
+        .message-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000; /* Above loading overlay */
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .message-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .message-modal-content.error {
+            border: 2px solid #dc2626; /* Red border for errors */
+        }
+
+        .message-modal-content h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #dc2626; /* Red for error messages */
+        }
+
+        .message-modal-content p {
+            margin-bottom: 1.5rem;
+            color: #4b5563; /* Gray text */
+        }
+
+        .message-modal-content button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .message-modal-content button:hover {
+            background-color: var(--primary-dark);
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen">
     <!-- Loading Overlay -->
     <div id="loadingIndicator" class="loading-overlay">
         <div class="spinner"></div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModalOverlay" class="message-modal-overlay hidden">
+        <div id="messageModalContent" class="message-modal-content">
+            <h3 id="messageModalTitle">Error!</h3>
+            <p id="messageModalText">An unexpected error occurred.</p>
+            <button id="messageModalCloseBtn">Close</button>
+        </div>
     </div>
 
     <div id="mainContent" class="opacity-0 transition-opacity duration-500 flex flex-col flex-grow">
@@ -266,11 +329,27 @@
         const SUPABASE_URL = 'https://jfrthopnsikgqololays.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnRob3Buc2lrZ3FvbG9sYXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzNTY5NDksImV4cCI6MjA3MDkzMjk0OX0.d9rlGE8dELYP5Yw3LTPVH-qkAppRKy5l2Eold6dKgMM'; 
 
-        // This check is now mainly for debugging if a user somehow puts incorrect values back.
-        if (SUPABASE_URL === 'YOUR_SUPABASE_PROJECT_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
-            console.error("Supabase credentials are placeholders. Please update them with your actual project URL and key.");
-            // Replaced alert() with console.error as alerts can block execution in some environments.
+        // --- Message Modal Elements ---
+        const messageModalOverlay = document.getElementById('messageModalOverlay');
+        const messageModalContent = document.getElementById('messageModalContent');
+        const messageModalTitle = document.getElementById('messageModalTitle');
+        const messageModalText = document.getElementById('messageModalText');
+        const messageModalCloseBtn = document.getElementById('messageModalCloseBtn');
+
+        // Function to show/hide the message modal
+        function showMessageModal(message, isError = true) {
+            messageModalTitle.textContent = isError ? 'Error!' : 'Success!';
+            messageModalTitle.style.color = isError ? '#dc2626' : '#10b981'; // Red for error, green for success
+            messageModalContent.classList.toggle('error', isError);
+            messageModalText.textContent = message;
+            messageModalOverlay.classList.remove('hidden');
         }
+
+        // Close button for the message modal
+        messageModalCloseBtn.addEventListener('click', () => {
+            messageModalOverlay.classList.add('hidden');
+        });
+
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -358,13 +437,13 @@
 
         // --- PAYMENT METHOD DISPLAY LOGIC ---
         function updatePaymentDetailsDisplay() {
-            const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value; // Correct variable name
             bankDetailsSection.style.display = 'none';
             easyPaisaSection.style.display = 'none';
 
-            if (selectedMethod === 'bank') {
+            if (selectedPaymentMethod === 'bank') { // Corrected variable name
                 bankDetailsSection.style.display = 'block';
-            } else if (selectedMethod === 'easypaisa') {
+            } else if (selectedPaymentMethod === 'easypaisa') { // Corrected variable name
                 easyPaisaSection.style.display = 'block';
             }
         }
@@ -398,7 +477,7 @@
             }
 
             if (cartItems.length === 0) {
-                console.error('Your cart is empty. Please add items before placing an order.');
+                showMessageModal('Your cart is empty. Please add items before placing an order.', true);
                 loadingIndicator.classList.add('hidden');
                 return;
             }
@@ -421,6 +500,7 @@
 
                     if (uploadError) {
                         console.error('Error uploading screenshot:', uploadError);
+                        showMessageModal(`Failed to upload screenshot: ${uploadError.message || 'Unknown error'}`, true);
                         loadingIndicator.classList.add('hidden');
                         return;
                     }
@@ -430,6 +510,7 @@
 
                 } catch (uploadException) {
                     console.error('Unexpected error during screenshot upload:', uploadException);
+                    showMessageModal(`An unexpected error occurred during screenshot upload. Please try again.`, true);
                     loadingIndicator.classList.add('hidden');
                     return;
                 }
@@ -453,7 +534,7 @@
                             customer_name: fullName,
                             customer_email: email,
                             customer_phno: phone,
-                            customer_address: address,
+                            customer_address: address, // This should map to customer_address
                             total_amount: totalAmount,
                             payment_method: selectedPaymentMethod, // Save selected payment method
                             transaction_id: transactionId,       // Save transaction ID
@@ -465,13 +546,19 @@
 
                 if (error) {
                     console.error('Error saving order to Supabase:', error);
+                    showMessageModal(`Failed to place order: ${error.message || 'Unknown error'}. Please try again.`, true);
                 } else {
                     console.log('Order saved successfully:', data);
                     localStorage.removeItem('cart'); // Clear cart after successful order
-                    window.location.href = 'thank-you.html?order_success=true'; // Redirect to thank you page
+                    // Optionally show a success message before redirecting
+                    showMessageModal('Order placed successfully! Redirecting...', false); // isError = false for success
+                    setTimeout(() => {
+                        window.location.href = 'thank-you.html?order_success=true'; // Redirect to thank you page
+                    }, 2000); // Give user 2 seconds to see success message
                 }
             } catch (dbError) {
                 console.error('An unexpected error occurred during database insertion:', dbError);
+                showMessageModal(`An unexpected error occurred: ${dbError.message || 'Unknown error'}. Please try again.`, true);
             } finally {
                 loadingIndicator.classList.add('hidden'); // Hide loading indicator regardless of success/failure
             }
