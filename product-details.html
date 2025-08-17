@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Product Details - Honey Harvest</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+        
+        /* Base styles with custom variables */
+        :root {
+            --primary-color: #f59e0b; /* Amber */
+            --primary-dark: #d97706;
+            --secondary-color: #10b981; /* Green for accents */
+            --secondary-dark: #059669;
+            --text-color: #1f2937; /* Gray 800 */
+            --bg-light: #fffbeb; /* Amber 50 */
+            --bg-dark: #0a0a0a; /* Neutral 950 */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-color);
+        }
+
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fffbeb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: flex-end;
+            z-index: 100;
+            opacity: 0; /* Start hidden */
+            visibility: hidden; /* Start hidden */
+            transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+        }
+
+        .cart-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .cart-content {
+            background-color: var(--bg-light);
+            width: 100%;
+            max-width: 420px;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .cart-overlay.active .cart-content {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800 bg-amber-50">
+    <!-- Loading Screen -->
+    <div id="loading-indicator" class="loading-overlay">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="mt-4 text-xl font-medium text-amber-600">Loading Honey...</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="opacity-0 transition-opacity duration-1000">
+
+        <!-- Navigation Bar -->
+        <header class="bg-white shadow-lg sticky top-0 z-50 rounded-b-xl">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <a href="index.html" class="flex items-center space-x-3 text-amber-600">
+                    <img src="https://placehold.co/40x40/fcd34d/4b5563?text=H" alt="Honey Harvest Logo" class="h-10 w-10 rounded-full">
+                    <span class="text-2xl font-display font-bold">Honey Harvest</span>
+                </a>
+                
+                <!-- Right side: Desktop Menu + Cart/Mobile Button -->
+                <div class="flex items-center space-x-8">
+                    <!-- Desktop Menu -->
+                    <nav class="hidden lg:block">
+                        <ul class="flex space-x-8">
+                            <li><a href="index.html#about" class="text-gray-600 hover:text-amber-500 font-medium transition duration-300">About Us</a></li>
+                            <li><a href="index.html#products" class="text-gray-600 hover:text-amber-500 font-medium transition duration-300">Products</a></li>
+                            <li><a href="index.html#blog" class="text-gray-600 hover:text-amber-500 font-medium transition duration-300">Blog</a></li>
+                            <li><a href="index.html#contact" class="text-gray-600 hover:text-amber-500 font-medium transition duration-300">Contact</a></li>
+                        </ul>
+                    </nav>
+
+                    <!-- Cart & Mobile Menu Button -->
+                    <div class="flex items-center space-x-4">
+                        <button id="cart-button" class="relative text-amber-600 hover:text-amber-800 transition duration-300">
+                            <i class="fas fa-shopping-cart text-2xl"></i>
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                        </button>
+                        <button id="mobile-menu-button" class="text-gray-600 hover:text-amber-500 transition duration-300 lg:hidden">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="lg:hidden hidden bg-white shadow-lg rounded-b-xl">
+                <ul class="flex flex-col items-start py-4 space-y-4 px-6">
+                    <li><a href="index.html#about" class="text-gray-600 hover:text-amber-500 font-medium block py-2 transition duration-300">About Us</a></li>
+                    <li><a href="index.html#products" class="text-gray-600 hover:text-amber-500 font-medium block py-2 transition duration-300">Products</a></li>
+                    <li><a href="index.html#blog" class="text-gray-600 hover:text-amber-500 font-medium block py-2 transition duration-300">Blog</a></li>
+                    <li><a href="index.html#contact" class="text-gray-600 hover:text-amber-500 font-medium block py-2 transition duration-300">Contact</a></li>
+                </ul>
+            </div>
+        </header>
+
+        <!-- Product Details Section -->
+        <section class="py-16 bg-amber-50">
+            <div class="container mx-auto px-4">
+                <div id="product-details-container" class="bg-white p-8 rounded-3xl shadow-xl flex flex-col md:flex-row gap-8 items-center">
+                    <!-- Product image and details will be rendered here by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Other Products Section -->
+        <section id="other-products" class="py-16 bg-white">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="font-display text-4xl font-bold text-gray-800">Other Products You Might Like</h2>
+                <div id="other-product-list" class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Other product cards will be injected here by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-white text-gray-800 py-12 rounded-t-[40px] shadow-lg">
+            <div class="container mx-auto px-4 text-center">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-4 md:mb-0">
+                        <h4 class="font-display text-2xl font-bold">Honey Harvest</h4>
+                        <p class="text-sm mt-2">© 2024 Honey Harvest. All rights reserved.</p>
+                    </div>
+                    <div class="space-x-6">
+                        <a href="index.html#about" class="text-gray-600 hover:text-amber-500 transition-colors duration-300">About Us</a>
+                        <a href="index.html#products" class="text-gray-600 hover:text-amber-500 transition-colors duration-300">Products</a>
+                        <a href="index.html#blog" class="text-gray-600 hover:text-amber-500 transition-colors duration-300">Blog</a>
+                        <a href="index.html#contact" class="text-gray-600 hover:text-amber-500 transition-colors duration-300">Contact</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Cart Overlay -->
+        <div id="cart-overlay" class="cart-overlay hidden">
+            <div id="cart-content" class="cart-content p-6">
+                <div class="flex justify-between items-center pb-4 border-b border-gray-200">
+                    <h3 class="text-2xl font-display font-bold">Your Cart</h3>
+                    <button class="text-gray-500 hover:text-gray-800" onclick="closeCart()">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div id="cart-items" class="mt-4 space-y-4">
+                    <!-- Cart items will be injected here -->
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between items-center text-xl font-bold">
+                        <span>Total:</span>
+                        <span id="cart-total">$0.00</span>
+                    </div>
+                    <button id="proceed-to-checkout-btn" class="w-full mt-4 bg-amber-500 text-white font-bold py-3 rounded-full hover:bg-amber-600 transition-colors duration-300">
+                        Proceed to Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const productsData = [
+                { id: 1, name: 'Wildflower Honey', price: 15.99, image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Wildflower', description: 'A rich, multi-floral blend with a sweet, classic honey flavor. Harvested from a variety of wildflowers, it captures the essence of a blooming meadow. Perfect for everyday use, baking, or stirring into your morning tea.', onSale: false },
+                { id: 2, name: 'Sidr Honey', price: 24.99, image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Sidr', description: 'A rare and prized honey from the Sidr tree, known for its unique taste and medicinal properties. It has a rich, buttery flavor and a dark, amber color. Often used for its health benefits and distinct aromatic profile.', onSale: true },
+                { id: 3, name: 'Acacia Honey', price: 18.99, image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Acacia', description: 'Light in color and mild in flavor, it is slow to crystallize and perfect for sweetening drinks or delicate pastries. Its gentle taste makes it a versatile pantry staple, great for those who prefer a less intense honey flavor.', onSale: false },
+                { id: 4, name: 'Eucalyptus Honey', price: 21.99, image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Eucalyptus', description: 'A distinct, slightly medicinal taste, ideal for soothing coughs and colds. It has a strong aroma and a full-bodied flavor that is a favorite for wellness, especially during flu season.', onSale: false },
+                { id: 5, name: 'Lavender Honey', price: 22.99, image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Lavender', description: 'Delicate and floral, harvested from bees that forage on lavender fields. This honey is perfect for drizzling over cheeses or adding to herbal teas for a calming effect, offering a unique aromatic experience.', onSale: false },
+                { id: 6, name: 'Manuka Honey', price: 39.99, image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Manuka', description: 'World-renowned for its powerful antibacterial properties and unique flavor. This is a premium honey known for its health benefits and thick, creamy texture, often used for wellness and topical applications.', onSale: true },
+                { id: 7, name: 'Forest Honey', price: 20.99, image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Forest', description: 'A dark, robust honey with hints of forest flora and a deep, earthy flavor. It is rich in minerals and has a bold taste that stands out, perfect for those who enjoy a more intense and complex honey.', onSale: false },
+                { id: 8, name: 'Clover Honey', price: 14.99, image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Clover', description: 'A light-colored, mild, and sweet honey, a perfect all-purpose choice for everyday use. Its classic, gentle flavor is beloved by all, making it ideal for toast, cereals, and light desserts.', onSale: false }
+            ];
+
+            const otherProductsData = [
+                { id: 1, name: 'Wildflower Honey', price: 15.99, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Wildflower', description: 'A rich, multi-floral blend with a sweet, classic honey flavor.' },
+                { id: 2, name: 'Sidr Honey', price: 24.99, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Sidr', description: 'A rare and prized honey from the Sidr tree, known for its unique taste.' },
+                { id: 3, name: 'Acacia Honey', price: 18.99, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Acacia', description: 'Light in color and mild in flavor, it is slow to crystallize.' },
+                { id: 4, name: 'Eucalyptus Honey', price: 21.99, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Eucalyptus', description: 'A distinct, slightly medicinal taste, ideal for soothing coughs.' }
+            ];
+
+            // --- DOM ELEMENTS ---
+            const pageTitle = document.getElementById('page-title');
+            const productDetailsContainer = document.getElementById('product-details-container');
+            const otherProductList = document.getElementById('other-product-list');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const cartButton = document.getElementById('cart-button');
+            const cartCount = document.getElementById('cart-count');
+            const cartOverlay = document.getElementById('cart-overlay');
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            const proceedToCheckoutBtn = document.getElementById('proceed-to-checkout-btn');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const mainContent = document.getElementById('main-content');
+
+            // --- STATE & DATA HANDLING ---
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            function saveCart() {
+                localStorage.setItem('cart', JSON.stringify(cart));
+            }
+
+            // --- FUNCTIONS ---
+
+            function getProductIdFromUrl() {
+                const params = new URLSearchParams(window.location.search);
+                return parseInt(params.get('id'));
+            }
+
+            function renderProductDetails(productId) {
+                const product = productsData.find(p => p.id === productId);
+                if (!product) {
+                    productDetailsContainer.innerHTML = `<p class="text-center text-red-500 text-xl w-full py-20">Product not found. Please go back to the <a href="index.html" class="text-amber-600 hover:underline">home page</a>.</p>`;
+                    pageTitle.textContent = "Product Not Found - Honey Harvest";
+                    return;
+                }
+
+                pageTitle.textContent = `${product.name} - Honey Harvest`;
+                // Adjusted image sizing for width decreased by 1/5 and height decreased by 1/3
+                productDetailsContainer.innerHTML = `
+                    <div class="lg:w-1/2 flex justify-center items-center p-4">
+                        <img src="${product.image}" alt="${product.name}" class="w-[60%] h-[44%] object-contain rounded-2xl shadow-lg transform transition-transform duration-300 hover:scale-105">
+                    </div>
+                    <div class="lg:w-1/2 text-center lg:text-left p-4">
+                        <h1 class="font-display text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">${product.name}</h1>
+                        <div class="flex items-center justify-center lg:justify-start mt-4 space-x-4">
+                            <span class="text-4xl font-bold text-amber-600">$${product.price.toFixed(2)}</span>
+                            ${product.onSale ? '<span class="text-lg text-red-500 line-through">$'+ (product.price * 1.2).toFixed(2) +'</span>' : ''}
+                        </div>
+                        <p class="mt-6 text-gray-700 leading-relaxed text-lg">${product.description}</p>
+                        
+                        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                            <!-- Quantity Selector -->
+                            <div class="flex items-center border border-gray-300 rounded-full px-3 py-1">
+                                <button id="decrease-quantity" class="text-gray-600 hover:text-amber-600 text-xl font-bold px-2">-</button>
+                                <input type="number" id="product-quantity" value="1" min="1" class="w-12 text-center border-none focus:ring-0 bg-transparent text-gray-800 font-semibold" readonly>
+                                <button id="increase-quantity" class="text-gray-600 hover:text-amber-600 text-xl font-bold px-2">+</button>
+                            </div>
+
+                            <button id="add-to-cart-btn" class="bg-amber-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-amber-600 transition duration-300 transform hover:scale-105 flex items-center justify-center w-full sm:w-auto">
+                                <i class="fas fa-shopping-cart mr-2"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `;
+                // Attach event listeners to the dynamically created elements
+                const addToCartBtn = document.getElementById('add-to-cart-btn');
+                const productQuantityInput = document.getElementById('product-quantity');
+                const decreaseQuantityBtn = document.getElementById('decrease-quantity');
+                const increaseQuantityBtn = document.getElementById('increase-quantity');
+
+                if (addToCartBtn) {
+                    addToCartBtn.addEventListener('click', () => {
+                        const quantity = parseInt(productQuantityInput.value);
+                        addToCart(product.id, quantity);
+                        openCart(); // Open the cart overlay after adding to cart
+                    });
+                }
+                
+                if (decreaseQuantityBtn) {
+                    decreaseQuantityBtn.addEventListener('click', () => {
+                        let currentQuantity = parseInt(productQuantityInput.value);
+                        if (currentQuantity > 1) {
+                            productQuantityInput.value = currentQuantity - 1;
+                        }
+                    });
+                }
+
+                if (increaseQuantityBtn) {
+                    increaseQuantityBtn.addEventListener('click', () => {
+                        let currentQuantity = parseInt(productQuantityInput.value);
+                        productQuantityInput.value = currentQuantity + 1;
+                    });
+                }
+            }
+
+            function renderOtherProducts() {
+                otherProductList.innerHTML = otherProductsData.map(product => `
+                    <div class="product-card bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl">
+                        <a href="product-details.html?id=${product.id}">
+                            <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover">
+                        </a>
+                        <div class="p-6">
+                            <a href="product-details.html?id=${product.id}">
+                                <h3 class="font-display text-2xl font-semibold text-gray-800">${product.name}</h3>
+                                <p class="mt-2 text-gray-600">${product.description}</p>
+                            </a>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="text-3xl font-bold text-amber-600">$${product.price.toFixed(2)}</span>
+                                <button class="add-to-cart-btn bg-amber-500 text-white p-3 rounded-full hover:bg-amber-600 transition-colors duration-300" data-id="${product.id}">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Event delegation for "Add to Cart" buttons on other products
+                otherProductList.addEventListener('click', (e) => {
+                    const addToCartBtn = e.target.closest('.add-to-cart-btn');
+                    if (addToCartBtn) {
+                        const productId = parseInt(addToCartBtn.dataset.id);
+                        addToCart(productId, 1);
+                        openCart(); // Open cart after adding from other products
+                    }
+                });
+            }
+
+            // Cart functions (Copied from index.html)
+            function updateCartDisplay() {
+                cartItems.innerHTML = cart.map(item => `
+                    <div class="flex items-center space-x-4 p-4 bg-amber-50 rounded-lg shadow">
+                        <img src="${item.image}" alt="${item.name}" class="h-16 w-16 object-cover rounded-md">
+                        <div class="flex-grow">
+                            <h4 class="font-display text-lg font-semibold">${item.name}</h4>
+                            <p class="text-gray-600">${item.quantity} x $${item.price.toFixed(2)}</p>
+                        </div>
+                        <button class="remove-from-cart-btn text-red-500 hover:text-red-700" data-id="${item.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                cartTotal.textContent = `$${total.toFixed(2)}`;
+                cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+                saveCart();
+            }
+
+            function openCart() {
+                cartOverlay.classList.remove('hidden');
+                setTimeout(() => {
+                    cartOverlay.classList.add('active');
+                }, 10);
+            }
+
+            function closeCart() {
+                cartOverlay.classList.remove('active');
+                setTimeout(() => {
+                    cartOverlay.classList.add('hidden');
+                }, 300);
+            }
+
+            function addToCart(productId, quantity) {
+                const product = productsData.find(p => p.id === productId);
+                if (!product) return;
+                
+                const existingItem = cart.find(item => item.id === product.id);
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    cart.push({ ...product, quantity: quantity });
+                }
+                updateCartDisplay();
+            }
+
+            // Generic message display function (Copied from index.html)
+            function displayMessage(title, message, type = 'info') {
+                const messageBox = document.createElement('div');
+                let bgColor = 'bg-blue-100';
+                let textColor = 'text-blue-800';
+                let buttonColor = 'bg-blue-500';
+
+                if (type === 'success') {
+                    bgColor = 'bg-green-100';
+                    textColor = 'text-green-800';
+                    buttonColor = 'bg-green-500';
+                } else if (type === 'warning') {
+                    bgColor = 'bg-yellow-100';
+                    textColor = 'text-yellow-800';
+                    buttonColor = 'bg-yellow-500';
+                } else if (type === 'error') {
+                    bgColor = 'bg-red-100';
+                    textColor = 'text-red-800';
+                    buttonColor = 'bg-red-500';
+                }
+
+                messageBox.className = `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${bgColor} ${textColor} p-6 rounded-xl shadow-2xl z-[200] text-center max-w-sm`;
+                messageBox.innerHTML = `
+                    <p class="text-xl font-bold mb-2">${title}</p>
+                    <p class="mt-2 text-gray-700">${message}</p>
+                    <button onclick="this.parentNode.remove()" class="mt-4 ${buttonColor} text-white py-2 px-5 rounded-full hover:${buttonColor.replace('500', '600')}">Close</button>
+                `;
+                document.body.appendChild(messageBox);
+            }
+
+            // --- EVENT LISTENERS ---
+            try {
+                // Event listener for mobile menu
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+                // Hide mobile menu when a link is clicked
+                mobileMenu.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+
+                // Event listeners for cart overlay
+                cartButton.addEventListener('click', openCart);
+                window.closeCart = closeCart; // Make closeCart globally accessible for the onclick in the HTML
+                
+                // Event listener for "Proceed to Checkout" button in cart - NOW REDIRECTS TO CHECKOUT.HTML
+                proceedToCheckoutBtn.addEventListener('click', () => {
+                    if (cart.length === 0) {
+                        displayMessage('Your cart is empty!', 'Please add some items before proceeding to checkout.', 'warning');
+                        return;
+                    }
+                    window.location.href = 'checkout.html'; // Direct navigation to checkout.html
+                });
+                
+                window.displayMessage = displayMessage; // Make globally accessible
+
+                // Smooth scrolling for anchor links
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const href = this.getAttribute('href');
+                        if (href.startsWith('#')) {
+                            document.querySelector(href).scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        } else {
+                            window.location.href = href;
+                        }
+                    });
+                });
+                // Smooth scrolling for anchor links that link to index.html
+                document.querySelectorAll('a[href^="index.html#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const targetId = this.getAttribute('href').split('#')[1];
+                        // Redirect to index.html and then scroll
+                        window.location.href = `index.html#${targetId}`;
+                    });
+                });
+
+                // --- INITIAL SETUP ---\
+                // Get product ID from URL and render content
+                const productId = getProductIdFromUrl();
+                renderProductDetails(productId);
+                renderOtherProducts();
+                updateCartDisplay();
+
+            } catch (error) {
+                // Log any errors that occur during the initial setup
+                console.error("An error occurred during page setup:", error);
+            } finally {
+                // Hide loading indicator and show main content after a brief delay
+                // This is placed in a finally block to ensure it always runs
+                setTimeout(() => {
+                    loadingIndicator.classList.add('hidden');
+                    mainContent.classList.remove('opacity-0');
+                }, 800);
+            }
+        });
+    </script>
+</body>
+</html>

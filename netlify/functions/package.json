@@ -1,0 +1,10 @@
+{
+  "name": "netlify-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for Honey Harvest",
+  "main": "get-orders.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.4",
+    "csv-stringify": "^6.4.5"
+  }
+}

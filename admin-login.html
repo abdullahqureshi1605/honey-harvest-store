@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+    
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f8f8;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 2rem;
+    }
+    .container {
+        background-color: #fff;
+        padding: 2.5rem;
+        border-radius: 0.75rem; /* rounded-lg */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+    .font-display {
+        font-family: 'Playfair Display', serif;
+    }
+    input[type="text"], input[type="password"] {
+        padding: 0.75rem;
+        border: 1px solid #e5e7eb; /* gray-300 */
+        border-radius: 0.375rem; /* rounded-md */
+        width: 100%;
+        margin-top: 0.25rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+        border-color: #f59e0b; /* primary-color */
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3); /* ring-primary-color */
+    }
+    button[type="submit"] {
+        background-color: #f59e0b; /* primary-color */
+        color: white;
+        font-weight: 700; /* font-bold */
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.375rem; /* rounded-md */
+        width: 100%;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+    button[type="submit"]:hover {
+        background-color: #d97706; /* primary-dark */
+    }
+    .message {
+        margin-top: 1rem;
+        color: #ef4444; /* red-500 */
+        font-size: 0.875rem; /* text-sm */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="font-display text-3xl font-bold text-amber-600 mb-6">Admin Login</h2>
+    <form id="loginForm">
+      <label for="username" class="block text-left text-sm font-medium text-gray-700">Username</label>
+      <input type="text" id="username" name="username" required>
+      
+      <label for="password" class="block text-left text-sm font-medium text-gray-700">Password</label>
+      <input type="password" id="password" name="password" required>
+      
+      <button type="submit">Login</button>
+    </form>
+    <p id="message" class="message"></p>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const messageElement = document.getElementById('message');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      messageElement.textContent = ''; // Clear previous messages
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        // This fetch calls your Netlify Function to verify credentials
+        const response = await fetch('/.netlify/functions/login', { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await response.json();
+        if (response.ok) { // Check if status is 2xx (success)
+          // Store a simple token in localStorage to indicate logged-in state
+          localStorage.setItem('auth-token', data.token); 
+          // Redirect to the admin dashboard page
+          window.location.href = '/admin-dashboard.html'; 
+        } else {
+          messageElement.textContent = data.message || 'Login failed. Please try again.';
+        }
+      } catch (error) {
+        console.error('Network or unexpected error during login:', error);
+        messageElement.textContent = 'An error occurred. Please check your network connection.';
+      }
+    });
+  </script>
+</body>
+</html>

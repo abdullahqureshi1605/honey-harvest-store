@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You for Your Order!</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+        
+        /* Base styles with custom variables */
+        :root {
+            --primary-color: #f59e0b; /* Amber */
+            --primary-dark: #d97706;
+            --secondary-color: #10b981; /* Green for accents */
+            --secondary-dark: #059669;
+            --text-color: #1f2937; /* Gray 800 */
+            --bg-light: #fffbeb; /* Amber 50 */
+            --bg-dark: #0a0a0a; /* Neutral 950 */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-color); /* Branding amber color */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+</head>
+<body>
+    <i class="fas fa-check-circle text-6xl md:text-8xl mb-6"></i>
+    <h1 class="font-display text-4xl md:text-6xl font-extrabold leading-tight mb-4">
+        Thanks for your order!
+    </h1>
+    <p class="text-xl md:text-2xl max-w-2xl mx-auto">
+        We've received your order and will reach out to you soon to confirm details and arrange delivery.
+    </p>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Redirect to the home page after 5 seconds
+            setTimeout(() => {
+                window.location.href = 'index.html'; 
+            }, 5000); // 5000 milliseconds = 5 seconds
+        });
+    </script>
+</body>
+</html>

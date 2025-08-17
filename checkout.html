@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Honey Harvest</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+        
+        /* Base styles with custom variables */
+        :root {
+            --primary-color: #f59e0b; /* Amber */
+            --primary-dark: #d97706;
+            --secondary-color: #10b981; /* Green for accents */
+            --secondary-dark: #059669;
+            --text-color: #1f2937; /* Gray 800 */
+            --bg-light: #fffbeb; /* Amber 50 */
+            --bg-dark: #0a0a0a; /* Neutral 950 */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-light);
+            line-height: 1.6;
+        }
+
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Loading indicator styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid var(--primary-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .opacity-0 {
+            opacity: 0;
+        }
+        .payment-details-section {
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <!-- Loading Overlay -->
+    <div id="loadingIndicator" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="mainContent" class="opacity-0 transition-opacity duration-500 flex flex-col flex-grow">
+        <!-- Header -->
+        <header class="bg-white shadow-md py-4">
+            <div class="container flex justify-between items-center">
+                <a href="index.html" class="flex items-center space-x-2">
+                    <img src="https://placehold.co/40x40/f59e0b/ffffff?text=🍯" alt="Honey Harvest Logo" class="h-10 w-10 rounded-full">
+                    <h1 class="text-2xl font-display font-bold text-primary-color">Honey Harvest</h1>
+                </a>
+                
+                <!-- Hamburger menu for mobile -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-700 hover:text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-color rounded-md p-2">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <nav id="desktop-nav" class="hidden md:flex items-center">
+                    <a href="index.html#products" class="text-gray-700 hover:text-primary-dark mx-3">Products</a>
+                    <a href="index.html#about" class="text-gray-700 hover:text-primary-dark mx-3">About Us</a>
+                    <a href="index.html#contact" class="text-gray-700 hover:text-primary-dark mx-3">Contact</a>
+                    <a href="checkout.html" class="relative text-gray-700 hover:text-primary-dark mx-3">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-secondary-color text-white text-xs font-bold rounded-full px-1.5 py-0.5">0</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- Mobile Menu (Hidden by default, shown by JS) -->
+            <nav id="mobile-menu" class="md:hidden hidden bg-white shadow-lg py-2 mt-2">
+                <div class="flex flex-col items-center">
+                    <a href="index.html#products" class="block text-gray-700 hover:text-primary-dark py-2">Products</a>
+                    <a href="index.html#about" class="block text-gray-700 hover:text-primary-dark py-2">About Us</a>
+                    <a href="index.html#contact" class="block text-gray-700 hover:text-primary-dark py-2">Contact</a>
+                    <a href="checkout.html" class="relative block text-gray-700 hover:text-primary-dark py-2">
+                        <i class="fas fa-shopping-cart"></i> Cart 
+                        <span id="cart-count-mobile" class="ml-1 bg-secondary-color text-white text-xs font-bold rounded-full px-1.5 py-0.5">0</span>
+                    </a>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="container py-8 flex-grow">
+            <h2 class="font-display text-4xl font-bold text-center text-primary-color mb-8">Checkout</h2>
+
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Order Summary -->
+                <div class="lg:w-1/2 bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="font-display text-2xl font-semibold text-gray-800 mb-4">Order Summary</h3>
+                    <div id="checkout-items" class="space-y-4 mb-6">
+                        <!-- Cart items will be rendered here by JavaScript -->
+                    </div>
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-700">Subtotal:</span>
+                            <span id="subtotalDisplay" class="font-bold text-gray-900">$0.00</span>
+                        </div>
+                        <!-- Shipping price removed -->
+                        <div class="flex justify-between items-center text-xl font-bold">
+                            <span class="text-primary-dark">Total:</span>
+                            <span id="totalAmountDisplay" class="text-primary-color">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checkout Form -->
+                <div class="lg:w-1/2 bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="font-display text-2xl font-semibold text-gray-800 mb-4">Shipping & Payment</h3>
+                    <form id="checkoutForm" class="space-y-4">
+                        <!-- Shipping Information -->
+                        <div>
+                            <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-color focus:border-primary-color">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-color focus:border-primary-color">
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-color focus:border-primary-color">
+                        </div>
+                        <div>
+                            <label for="address" class="block text-sm font-medium text-gray-700">Shipping Address</label>
+                            <textarea id="address" name="address" rows="3" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-color focus:border-primary-color"></textarea>
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                            <div class="flex flex-col space-y-2">
+                                <div class="flex items-center">
+                                    <input type="radio" id="cashOnDelivery" name="paymentMethod" value="cod" class="focus:ring-primary-color h-4 w-4 text-primary-color border-gray-300" checked>
+                                    <label for="cashOnDelivery" class="ml-2 block text-sm text-gray-900">Cash on Delivery</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="bankTransfer" name="paymentMethod" value="bank" class="focus:ring-primary-color h-4 w-4 text-primary-color border-gray-300">
+                                    <label for="bankTransfer" class="ml-2 block text-sm text-gray-900">Bank Transfer</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="easyPaisa" name="paymentMethod" value="easypaisa" class="focus:ring-primary-color h-4 w-4 text-primary-color border-gray-300">
+                                    <label for="easyPaisa" class="ml-2 block text-sm text-gray-900">EasyPaisa</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bank Transfer Details Section -->
+                        <div id="bankDetailsSection" class="payment-details-section p-4 bg-gray-50 rounded-md border border-gray-200">
+                            <h4 class="font-semibold text-gray-800 mb-3">Bank Transfer Information</h4>
+                            <p class="text-sm text-gray-700 mb-2">Please transfer the total amount to the following bank account:</p>
+                            <ul class="text-sm text-gray-800 space-y-1">
+                                <li><strong>Bank Name:</strong> ABC Bank</li>
+                                <li><strong>Account Name:</strong> Honey Harvest</li>
+                                <li><strong>Account Number:</strong> 1234-5678-9012-3456</li>
+                                <li><strong>IBAN:</strong> PKXXABCYYYYYYYYYYYY</li>
+                            </ul>
+                            <div class="mt-4">
+                                <label for="bankTransactionId" class="block text-sm font-medium text-gray-700">Your Transaction ID (Optional)</label>
+                                <input type="text" id="bankTransactionId" name="bankTransactionId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-color focus:border-primary-color">
+                            </div>
+                            <div class="mt-4">
+                                <label for="bankScreenshot" class="block text-sm font-medium text-gray-700">Upload Transaction Screenshot</label>
+                                <input type="file" id="bankScreenshot" name="bankScreenshot" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-800">
+                            </div>
+                        </div>
+
+                        <!-- EasyPaisa Details Section -->
+                        <div id="easyPaisaSection" class="payment-details-section p-4 bg-gray-50 rounded-md border border-gray-200">
+                            <h4 class="font-semibold text-gray-800 mb-3">EasyPaisa Information</h4>
+                            <p class="text-sm text-gray-700 mb-2">Please transfer the total amount to the following EasyPaisa account:</p>
+                            <ul class="text-sm text-gray-800 space-y-1">
+                                <li><strong>Account Name:</strong> Honey Harvest Easy</li>
+                                <li><strong>Mobile Number:</strong> +92 3XX XXXXXXX</li>
+                            </ul>
+                            <div class="mt-4">
+                                <label for="easyPaisaTransactionId" class="block text-sm font-medium text-gray-700">Your Transaction ID (Optional)</label>
+                                <input type="text" id="easyPaisaTransactionId" name="easyPaisaTransactionId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-color focus:border-primary-color">
+                            </div>
+                            <div class="mt-4">
+                                <label for="easyPaisaScreenshot" class="block w-full text-sm font-medium text-gray-700">Upload Transaction Screenshot</label>
+                                <input type="file" id="easyPaisaScreenshot" name="easyPaisaScreenshot" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-800">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gray-700 text-white py-3 px-4 rounded-md font-semibold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2">
+                            Place Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-6 mt-8">
+            <div class="container flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="font-display text-xl font-bold mb-2">Honey Harvest</h3>
+                    <p class="text-sm">&copy; 2025 All rights reserved.</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="https://facebook.com" target="_blank" class="text-gray-300 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com" target="_blank" class="text-gray-300 hover:text-white"><i class="fab fa-twitter"></i></a>
+                    <a href="https://instagram.com" target="_blank" class="text-gray-300 hover:text-white"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Supabase CDN and Custom Script -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        // --- IMPORTANT: REPLACE WITH YOUR ACTUAL SUPABASE PROJECT URL AND ANON KEY ---
+        // You can find these in your Supabase project settings -> API
+        const SUPABASE_URL = 'https://jfrthopnsikgqololays.supabase.co'; // e.g., 'https://abcde.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnRob3Buc2lrZ3FvbG9sYXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzNTY5NDksImV4cCI6MjA3MDkzMjk0OX0.d9rlGE8dELYP5Yw3LTPVH-qkAppRKy5l2Eold6dKgMM'; // This is the public 'anon' key
+
+        if (SUPABASE_URL === 'YOUR_SUPABASE_PROJECT_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+            console.error("Please replace 'YOUR_SUPABASE_PROJECT_URL' and 'YOUR_SUPABASE_ANON_KEY' with your actual Supabase credentials.");
+            alert("Supabase credentials not set up. Please check console for instructions.");
+        }
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- DOM Elements ---
+        const checkoutForm = document.getElementById('checkoutForm');
+        const checkoutItemsContainer = document.getElementById('checkout-items');
+        const subtotalDisplay = document.getElementById('subtotalDisplay');
+        const totalAmountDisplay = document.getElementById('totalAmountDisplay'); // Removed shippingDisplay
+        const cartCountSpan = document.getElementById('cart-count');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const mainContent = document.getElementById('mainContent');
+
+        // Payment method specific elements
+        const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+        const bankDetailsSection = document.getElementById('bankDetailsSection');
+        const easyPaisaSection = document.getElementById('easyPaisaSection');
+
+        // Mobile menu elements
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const cartCountMobileSpan = document.getElementById('cart-count-mobile');
+
+
+        // --- CART FUNCTIONS ---
+        function getCart() {
+            try {
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                return cart;
+            } catch (e) {
+                console.error("Error parsing cart from localStorage:", e);
+                return [];
+            }
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cart = getCart();
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            if (cartCountSpan) {
+                cartCountSpan.textContent = totalItems;
+            }
+            if (cartCountMobileSpan) { // Update mobile cart count
+                cartCountMobileSpan.textContent = totalItems;
+            }
+        }
+
+        function renderCheckoutSummary() {
+            const cart = getCart();
+            checkoutItemsContainer.innerHTML = '';
+            let subtotal = 0;
+
+            if (cart.length === 0) {
+                checkoutItemsContainer.innerHTML = '<p class="text-gray-600 text-center">Your cart is empty.</p>';
+            } else {
+                cart.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    subtotal += itemTotal;
+
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'flex justify-between items-center py-2 border-b last:border-b-0';
+                    itemElement.innerHTML = `
+                        <div class="flex items-center">
+                            <img src="${item.image || 'https://placehold.co/60x60/f59e0b/ffffff?text=Honey'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-md mr-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${item.name}</h4>
+                                <p class="text-sm text-gray-600">Quantity: ${item.quantity}</p>
+                            </div>
+                        </div>
+                        <span class="font-bold text-gray-900">$${itemTotal.toFixed(2)}</span>
+                    `;
+                    checkoutItemsContainer.appendChild(itemElement);
+                });
+            }
+
+            // Shipping is removed, so total is just subtotal
+            const total = subtotal; 
+
+            subtotalDisplay.textContent = `$${subtotal.toFixed(2)}`;
+            totalAmountDisplay.textContent = `$${total.toFixed(2)}`;
+        }
+
+        // --- PAYMENT METHOD DISPLAY LOGIC ---
+        function updatePaymentDetailsDisplay() {
+            const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            bankDetailsSection.style.display = 'none';
+            easyPaisaSection.style.display = 'none';
+
+            if (selectedMethod === 'bank') {
+                bankDetailsSection.style.display = 'block';
+            } else if (selectedMethod === 'easypaisa') {
+                easyPaisaSection.style.display = 'block';
+            }
+        }
+
+
+        // --- FORM SUBMISSION & SUPABASE INSERTION ---
+        checkoutForm.addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            loadingIndicator.classList.remove('hidden'); // Show loading indicator
+
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const totalAmount = parseFloat(totalAmountDisplay.textContent.replace('$', ''));
+            const cartItems = getCart();
+            const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+            let transactionId = null;
+            let screenshotFile = null;
+            let screenshotUrl = null; // To store the URL of the uploaded screenshot
+
+            // Get payment method specific data
+            if (selectedPaymentMethod === 'bank') {
+                transactionId = document.getElementById('bankTransactionId').value;
+                screenshotFile = document.getElementById('bankScreenshot').files[0];
+            } else if (selectedPaymentMethod === 'easypaisa') {
+                transactionId = document.getElementById('easyPaisaTransactionId').value;
+                screenshotFile = document.getElementById('easyPaisaScreenshot').files[0];
+            }
+
+            if (cartItems.length === 0) {
+                alert('Your cart is empty. Please add items before placing an order.');
+                loadingIndicator.classList.add('hidden');
+                return;
+            }
+
+            // Upload screenshot if available
+            if (screenshotFile) {
+                const fileExtension = screenshotFile.name.split('.').pop();
+                // Ensure unique filename
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+                const filePath = `transaction-screenshots/${fileName}`;
+
+                try {
+                    // Upload the file to Supabase Storage
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('transaction-screenshots') // Your storage bucket name
+                        .upload(filePath, screenshotFile, {
+                            cacheControl: '3600', // Cache for 1 hour
+                            upsert: false, // Do not overwrite existing files
+                        });
+
+                    if (uploadError) {
+                        console.error('Error uploading screenshot:', uploadError);
+                        alert('Error uploading screenshot. Please try again.');
+                        loadingIndicator.classList.add('hidden');
+                        return;
+                    }
+                    // Get the public URL of the uploaded file
+                    screenshotUrl = supabase.storage.from('transaction-screenshots').getPublicUrl(filePath).data.publicUrl;
+                    console.log('Screenshot uploaded:', screenshotUrl);
+
+                } catch (uploadException) {
+                    console.error('Unexpected error during screenshot upload:', uploadException);
+                    alert('An unexpected error occurred during screenshot upload. Please try again.');
+                    loadingIndicator.classList.add('hidden');
+                    return;
+                }
+            }
+
+
+            // Prepare product_details as a JSON array of objects
+            const productDetails = cartItems.map(item => ({
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price
+            }));
+
+            try {
+                // Insert order into Supabase database
+                const { data, error } = await supabase
+                    .from('orders')
+                    .insert([
+                        {
+                            customer_name: fullName,
+                            customer_email: email,
+                            customer_phno: phone,
+                            customer_address: address,
+                            total_amount: totalAmount,
+                            payment_method: selectedPaymentMethod, // Save selected payment method
+                            transaction_id: transactionId,       // Save transaction ID
+                            transaction_screenshot_url: screenshotUrl, // Save screenshot URL
+                            product_details: productDetails 
+                        }
+                    ])
+                    .select(); // Use .select() to return the inserted data
+
+                if (error) {
+                    console.error('Error saving order to Supabase:', error);
+                    alert('There was an error processing your order. Please try again.');
+                } else {
+                    console.log('Order saved successfully:', data);
+                    localStorage.removeItem('cart'); // Clear cart after successful order
+                    window.location.href = 'thank-you.html?order_success=true'; // Redirect to thank you page
+                }
+            } catch (dbError) {
+                console.error('An unexpected error occurred during database insertion:', dbError);
+                alert('An unexpected error occurred. Please try again.');
+            } finally {
+                loadingIndicator.classList.add('hidden'); // Hide loading indicator regardless of success/failure
+            }
+        });
+
+        // --- EVENT LISTENERS ---
+        paymentMethodRadios.forEach(radio => {
+            radio.addEventListener('change', updatePaymentDetailsDisplay);
+        });
+
+        // Mobile menu toggle
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- INITIAL SETUP ON PAGE LOAD ---
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                renderCheckoutSummary();
+                updateCartDisplay();
+                updatePaymentDetailsDisplay(); // Initialize display based on default checked radio
+            } catch (error) {
+                console.error("An error occurred during page setup:", error);
+            } finally {
+                // Hide loading indicator and show main content after a brief delay
+                setTimeout(() => {
+                    loadingIndicator.classList.add('hidden');
+                    mainContent.classList.remove('opacity-0');
+                }, 800);
+            }
+        });
+
+        // Smooth scrolling for anchor links (if any are added to checkout.html later)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

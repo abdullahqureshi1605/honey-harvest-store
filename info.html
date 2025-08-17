@@ -1,0 +1,339 @@
+import { useState } from 'react';
+
+// Main App component
+export default function App() {
+    const [mockupImages, setMockupImages] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    // Function to generate images using the Imagen 3.0 API
+    const generateMockups = async () => {
+        setLoading(true);
+        setError(null);
+        setMockupImages([]);
+
+        // Prompts for each product mockup
+        const prompts = [
+            "a photorealistic product shot of a small glass jar of Himalayan Salajeet. The jar has a simple label with the brand logo, a mountain icon, and the text 'Himalayan Salajeet' in a vintage, elegant serif font. The background is a natural, rustic setting with a wooden surface.",
+            "a photorealistic image of a glass honey jar filled with golden honey. The label on the jar features a stylized honey drop and the text 'Pure & Natural Honey'. The background is bright and airy, with a soft focus on wildflowers.",
+            "a professional product photo of a dark glass bottle of Nourishing Hair Oil. The label is clean and features an icon of a leaf or drop, with the text 'Nourishing Hair Oil' in a clean, modern font. The bottle is placed on a smooth, dark wooden table.",
+            "a realistic image of an apothecary-style bottle containing a brownish-red Herbal Vigor Tonic. The label is minimalistic with a geometric pattern and the product name 'Herbal Vigor Tonic'. The bottle is in a health and wellness context.",
+            "a realistic, high-quality photograph of a rectangular cardboard packaging box for Zameen Naturals products. The box is made of recycled material, with the brand logo prominently featured and the brand name 'Zameen Naturals' in the brand's primary font.",
+            "a realistic photo of a natural, eco-friendly shopping bag. The bag is a neutral beige color and has the Zameen Naturals logo and name printed on it in a dark green color. The bag is slightly creased and has a textured feel."
+        ];
+
+        // Store the image data in a temporary array
+        let generatedImages = [];
+        let retryCount = 0;
+        const maxRetries = 3;
+        const baseDelay = 1000; // 1 second
+
+        // Helper function for exponential backoff retry logic
+        const fetchWithRetry = async (prompt) => {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const payload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1 } };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                        return result.predictions[0].bytesBase64Encoded;
+                    } else {
+                        throw new Error("Invalid response structure from API.");
+                    }
+                } catch (e) {
+                    console.error(`Attempt ${i + 1} failed:`, e);
+                    if (i < maxRetries - 1) {
+                        const delay = baseDelay * Math.pow(2, i);
+                        await new Promise(res => setTimeout(res, delay));
+                    }
+                }
+            }
+            throw new Error("Failed to generate image after multiple retries.");
+        };
+
+        try {
+            // Use Promise.all to fetch all images concurrently
+            const imagePromises = prompts.map(fetchWithRetry);
+            generatedImages = await Promise.all(imagePromises);
+            setMockupImages(generatedImages);
+        } catch (e) {
+            console.error(e);
+            setError("Failed to generate mockups. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-off-white text-charcoal-gray font-inter leading-relaxed">
+            <div className="container mx-auto px-4 py-12">
+
+                {/* Header and Mission Section */}
+                <header className="text-center mb-16">
+                    {/* Main Logo - Re-using SVG from previous version */}
+                    <div className="inline-block mb-4">
+                        <svg className="h-24 w-24 mx-auto" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="45" stroke="#4F6F4C" strokeWidth="2"/>
+                            <path d="M50 5L75 25H25L50 5Z" fill="#F8D879"/>
+                            <path d="M50 95L25 75H75L50 95Z" fill="#F8D879"/>
+                            <path d="M5 50L25 75V25L5 50Z" fill="#F8D879"/>
+                            <path d="M95 50L75 25V75L95 50Z" fill="#F8D879"/>
+                            <path d="M25 25L35 35L25 45H15L25 25Z" fill="#4F6F4C"/>
+                            <path d="M50 40C45 40 40 45 40 50C40 55 45 60 50 60C55 60 60 55 60 50C60 45 55 40 50 40Z" fill="#D2833F"/>
+                            <path d="M50 40L45 35C45 30 55 30 55 35L50 40Z" fill="#F8D879"/>
+                            <path d="M50 60L45 65C45 70 55 70 55 65L50 60Z" fill="#F8D879"/>
+                        </svg>
+                    </div>
+                    <h1 className="text-5xl font-bold font-playfair text-charcoal-gray">Zameen Naturals</h1>
+                    <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-700">
+                        To connect people with the timeless purity and wellness of nature through a curated collection of traditional and natural products, sourced directly from the earth.
+                    </p>
+                </header>
+
+                {/* Brand Elements Section */}
+                <section className="mb-16">
+                    <h2 className="text-4xl font-bold font-playfair text-center mb-8">Brand Elements</h2>
+                    
+                    {/* Color Palette */}
+                    <div className="mb-12">
+                        <h3 className="text-2xl font-bold font-playfair mb-4">Color Palette</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            {/* Earth Amber */}
+                            <div className="bg-earth-amber rounded-lg shadow-md p-6 h-32 flex flex-col justify-end">
+                                <span className="text-white font-bold">Earth Amber</span>
+                                <span className="text-white text-sm">#D2833F</span>
+                            </div>
+                            {/* Forest Green */}
+                            <div className="bg-forest-green rounded-lg shadow-md p-6 h-32 flex flex-col justify-end">
+                                <span className="text-white font-bold">Forest Green</span>
+                                <span className="text-white text-sm">#4F6F4C</span>
+                            </div>
+                            {/* Golden Honey */}
+                            <div className="bg-golden-honey rounded-lg shadow-md p-6 h-32 flex flex-col justify-end">
+                                <span className="text-charcoal-gray font-bold">Golden Honey</span>
+                                <span className="text-charcoal-gray text-sm">#F8D879</span>
+                            </div>
+                            {/* Off-White */}
+                            <div className="bg-off-white rounded-lg shadow-md p-6 h-32 flex flex-col justify-end border border-gray-200">
+                                <span className="text-charcoal-gray font-bold">Off-White</span>
+                                <span className="text-charcoal-gray text-sm">#FBF8F1</span>
+                            </div>
+                            {/* Charcoal Gray */}
+                            <div className="bg-charcoal-gray rounded-lg shadow-md p-6 h-32 flex flex-col justify-end">
+                                <span className="text-white font-bold">Charcoal Gray</span>
+                                <span className="text-white text-sm">#323232</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Typography */}
+                    <div>
+                        <h3 className="text-2xl font-bold font-playfair mb-4">Typography</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Playfair Display */}
+                            <div className="p-6 bg-white rounded-lg shadow-md border border-gray-200">
+                                <p className="font-playfair text-5xl font-bold mb-2">Playfair Display</p>
+                                <p className="font-playfair text-xl">Used for titles and headings.</p>
+                                <p className="mt-4">"The elegant, serif style gives a premium, classic feel."</p>
+                            </div>
+                            {/* Inter */}
+                            <div className="p-6 bg-white rounded-lg shadow-md border border-gray-200">
+                                <p className="font-inter text-5xl font-bold mb-2">Inter</p>
+                                <p className="font-inter text-xl">Used for body text and details.</p>
+                                <p className="mt-4">"A clean, modern sans-serif font ensures excellent readability."</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Product Labels Section */}
+                <section className="mb-16">
+                    <h2 className="text-4xl font-bold font-playfair text-center mb-8">Product Labels & Packaging (Conceptual)</h2>
+                    
+                    {/* Product Labels */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {/* Salajeet Label */}
+                        <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center border border-gray-200">
+                            <div className="bg-off-white p-8 rounded-lg shadow-inner w-full flex flex-col items-center text-center">
+                                <div className="w-16 h-16">
+                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M50 10L80 50L50 90L20 50L50 10Z" stroke="#4F6F4C" strokeWidth="4"/>
+                                        <path d="M50 10L35 35L20 50H80L65 35L50 10Z" stroke="#4F6F4C" strokeWidth="4"/>
+                                        <path d="M50 90L65 65L80 50H20L35 65L50 90Z" stroke="#4F6F4C" strokeWidth="4"/>
+                                        <path d="M50 45L40 35H60L50 45Z" fill="#4F6F4C"/>
+                                        <path d="M50 55L40 65H60L50 55Z" fill="#4F6F4C"/>
+                                    </svg>
+                                </div>
+                                <h4 className="mt-4 text-2xl font-playfair font-bold">Himalayan Salajeet</h4>
+                                <p className="text-sm">پہاڑوں کا جوہر</p>
+                                <p className="mt-2 text-sm text-gray-500">The Essence of the Mountains</p>
+                            </div>
+                            <p className="mt-4 text-center text-sm font-playfair font-bold">Salajeet (ہمالیہ شلاجیت)</p>
+                        </div>
+                        
+                        {/* Honey Label */}
+                        <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center border border-gray-200">
+                            <div className="bg-off-white p-8 rounded-lg shadow-inner w-full flex flex-col items-center text-center">
+                                <div className="w-16 h-16">
+                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M50 10L40 30L60 30L50 10Z" fill="#F8D879"/>
+                                        <path d="M50 30L40 50L60 50L50 30Z" fill="#F8D879"/>
+                                        <path d="M50 50L40 70L60 70L50 50Z" fill="#F8D879"/>
+                                        <path d="M50 70L40 90L60 90L50 70Z" fill="#F8D879"/>
+                                        <circle cx="50" cy="50" r="10" fill="#D2833F"/>
+                                    </svg>
+                                </div>
+                                <h4 className="mt-4 text-2xl font-playfair font-bold">Pure & Natural Honey</h4>
+                                <p className="text-sm">جنگلی علاقوں کا سنہرا امرت</p>
+                                <p className="mt-2 text-sm text-gray-500">Golden Nectar of the Wild</p>
+                            </div>
+                            <p className="mt-4 text-center text-sm font-playfair font-bold">Honey (خالص شہد)</p>
+                        </div>
+                        
+                        {/* Hair Oil Label */}
+                        <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center border border-gray-200">
+                            <div className="bg-off-white p-8 rounded-lg shadow-inner w-full flex flex-col items-center text-center">
+                                <div className="w-16 h-16">
+                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M50 90C50 90 20 80 20 50C20 20 40 10 50 10C60 10 80 20 80 50C80 80 50 90 50 90Z" stroke="#4F6F4C" strokeWidth="4"/>
+                                        <path d="M50 10L50 90" stroke="#4F6F4C" strokeWidth="4"/>
+                                        <path d="M30 40C30 40 40 30 50 40" stroke="#4F6F4C" strokeWidth="4"/>
+                                        <path d="M70 40C70 40 60 30 50 40" stroke="#4F6F4C" strokeWidth="4"/>
+                                    </svg>
+                                </div>
+                                <h4 className="mt-4 text-2xl font-playfair font-bold">Nourishing Hair Oil</h4>
+                                <p className="text-sm">قدرتی جڑی بوٹیوں سے تیار کردہ</p>
+                                <p className="mt-2 text-sm text-gray-500">Infused with Natural Herbs</p>
+                            </div>
+                            <p className="mt-4 text-center text-sm font-playfair font-bold">Hair Oil (قدرتی بالوں کا تیل)</p>
+                        </div>
+
+                        {/* Herbal Vigor Tonic Label */}
+                        <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center border border-gray-200">
+                            <div className="bg-off-white p-8 rounded-lg shadow-inner w-full flex flex-col items-center text-center">
+                                <div className="w-16 h-16">
+                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M50 10L30 90L70 90L50 10Z" fill="#D2833F"/>
+                                        <path d="M50 10L30 90" stroke="#323232" strokeWidth="4"/>
+                                        <path d="M50 10L70 90" stroke="#323232" strokeWidth="4"/>
+                                        <path d="M30 90L70 90" stroke="#323232" strokeWidth="4"/>
+                                    </svg>
+                                </div>
+                                <h4 className="mt-4 text-2xl font-playfair font-bold">Herbal Vigor Tonic</h4>
+                                <p className="text-sm">صحت اور طاقت کے لیے</p>
+                                <p className="mt-2 text-sm text-gray-500">For Vitality & Strength</p>
+                            </div>
+                            <p className="mt-4 text-center text-sm font-playfair font-bold">Vigor Tonic (قوت مردانگی کا ہربل ٹانک)</p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Product Mockups Section (New Dynamic Section) */}
+                <section className="mb-16 text-center">
+                    <h2 className="text-4xl font-bold font-playfair mb-8">Product Mockups</h2>
+                    <p className="max-w-2xl mx-auto mb-12 text-gray-700">
+                        A realistic preview of how the branding elements would appear on actual product packaging.
+                    </p>
+                    
+                    {/* Button to trigger image generation */}
+                    {!loading && mockupImages.length === 0 && (
+                        <button
+                            onClick={generateMockups}
+                            className="bg-forest-green text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-forest-green/90 transition-colors duration-300 transform hover:scale-105"
+                        >
+                            Generate Realistic Mockups
+                        </button>
+                    )}
+
+                    {/* Loading indicator */}
+                    {loading && (
+                        <div className="flex items-center justify-center space-x-2 my-12">
+                            <div className="w-8 h-8 rounded-full animate-spin border-4 border-solid border-forest-green border-t-transparent"></div>
+                            <p className="text-lg font-inter text-charcoal-gray">Generating mockups...</p>
+                        </div>
+                    )}
+                    
+                    {/* Error message */}
+                    {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-6" role="alert">
+                            <span className="block sm:inline">{error}</span>
+                        </div>
+                    )}
+
+                    {/* Display generated mockups */}
+                    {mockupImages.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {mockupImages.map((image, index) => (
+                                <div key={index} className="flex flex-col items-center text-center">
+                                    <img 
+                                        src={`data:image/png;base64,${image}`} 
+                                        alt={`Product mockup ${index + 1}`} 
+                                        className="mockup-img w-full h-auto rounded-lg shadow-md" 
+                                    />
+                                    {/* Titles based on the order of prompts */}
+                                    <p className="mt-4 text-sm font-playfair font-bold">
+                                        {[
+                                            "Himalayan Salajeet", 
+                                            "Pure & Natural Honey", 
+                                            "Nourishing Hair Oil", 
+                                            "Herbal Vigor Tonic",
+                                            "Packaging Box",
+                                            "Shopping Bag"
+                                        ][index]}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+            </div>
+        </div>
+    );
+}
+
+// Custom CSS styles
+const styles = `
+    .font-playfair { font-family: 'Playfair Display', serif; }
+    .font-inter { font-family: 'Inter', sans-serif; }
+
+    :root {
+        --earth-amber: #D2833F;
+        --forest-green: #4F6F4C;
+        --golden-honey: #F8D879;
+        --off-white: #FBF8F1;
+        --charcoal-gray: #323232;
+    }
+
+    .bg-earth-amber { background-color: var(--earth-amber); }
+    .bg-forest-green { background-color: var(--forest-green); }
+    .bg-golden-honey { background-color: var(--golden-honey); }
+    .bg-off-white { background-color: var(--off-white); }
+    .bg-charcoal-gray { background-color: var(--charcoal-gray); }
+
+    .text-earth-amber { color: var(--earth-amber); }
+    .text-forest-green { color: var(--forest-green); }
+    .text-golden-honey { color: var(--golden-honey); }
+    .text-off-white { color: var(--off-white); }
+    .text-charcoal-gray { color: var(--charcoal-gray); }
+
+    .mockup-img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+`;
+
+// Inject custom styles into the head of the document
+document.head.appendChild(document.createElement('style')).textContent = styles;

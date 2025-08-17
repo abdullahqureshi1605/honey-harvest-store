@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Honey Harvest</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f8f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 0.75rem; /* rounded-lg */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #f59e0b; /* primary-color */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="font-display text-4xl font-bold text-amber-600 mb-6">Admin Dashboard</h1>
+        <p class="text-lg text-gray-700 mb-8">Welcome, Administrator. From here you can manage your orders.</p>
+
+        <button id="downloadOrdersBtn" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 flex items-center justify-center mx-auto">
+            <span id="buttonText">Download All Orders (CSV)</span>
+            <span id="loadingSpinner" class="loading-spinner hidden"></span>
+        </button>
+        <p id="message" class="mt-4 text-red-500"></p>
+        <button id="logoutBtn" class="mt-6 text-gray-600 hover:text-gray-900 text-sm">Logout</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const authToken = localStorage.getItem('auth-token');
+            const downloadOrdersBtn = document.getElementById('downloadOrdersBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const messageElement = document.getElementById('message');
+            const buttonText = document.getElementById('buttonText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            // Check for authentication token before showing content
+            if (!authToken) {
+                alert('You are not logged in. Redirecting to login page.');
+                window.location.href = '/admin-login.html';
+                return; // Stop execution if not authenticated
+            }
+
+            downloadOrdersBtn.addEventListener('click', async () => {
+                buttonText.textContent = 'Downloading...';
+                loadingSpinner.classList.remove('hidden');
+                downloadOrdersBtn.disabled = true; // Disable button during download
+                messageElement.textContent = ''; // Clear previous messages
+
+                try {
+                    // This fetch calls your Netlify Function to get order data
+                    const response = await fetch('/.netlify/functions/get-orders', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}` // Send the stored token
+                        }
+                    });
+
+                    if (response.ok) { // If the response status is 2xx
+                        const blob = await response.blob(); // Get the response as a file (CSV)
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a'); // Create a temporary link
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = 'all_orders.csv'; // Set the download file name
+                        document.body.appendChild(a);
+                        a.click(); // Programmatically click the link to trigger download
+                        window.URL.revokeObjectURL(url); // Clean up the temporary URL
+                        messageElement.textContent = 'CSV downloaded successfully!';
+                        messageElement.className = 'mt-4 text-green-600'; // Success message color
+                    } else {
+                        const errorText = await response.text(); // Get raw error response for debugging
+                        console.error('Failed to download orders:', response.status, errorText);
+                        if (response.status === 401) { // If unauthorized
+                            messageElement.textContent = 'Authentication failed. Please log in again.';
+                            messageElement.className = 'mt-4 text-red-500';
+                            localStorage.removeItem('auth-token'); // Clear invalid token
+                            setTimeout(() => {
+                                window.location.href = '/admin-login.html'; // Redirect to login
+                            }, 2000); // Give user time to read message
+                        } else {
+                            messageElement.textContent = `Error: Could not download orders. Status: ${response.status}`;
+                            messageElement.className = 'mt-4 text-red-500';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Network or unexpected error:', error);
+                    messageElement.textContent = 'An unexpected error occurred during download.';
+                    messageElement.className = 'mt-4 text-red-500';
+                } finally {
+                    buttonText.textContent = 'Download All Orders (CSV)';
+                    loadingSpinner.classList.add('hidden');
+                    downloadOrdersBtn.disabled = false; // Re-enable button
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('auth-token'); // Clear the token
+                alert('Logged out successfully.'); // Simple alert for logout
+                window.location.href = '/admin-login.html'; // Redirect to login
+            });
+        });
+    </script>
+</body>
+</html>

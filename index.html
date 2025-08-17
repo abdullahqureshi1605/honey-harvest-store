@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honey Harvest - Natural & Pure Honey</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+        
+        /* Base styles with custom variables */
+        :root {
+            --primary-color: #f59e0b; /* Amber */
+            --primary-dark: #d97706;
+            --secondary-color: #10b981; /* Green for accents */
+            --secondary-dark: #059669;
+            --text-color: #1f2937; /* Gray 800 */
+            --bg-light: #fffbeb; /* Amber 50 */
+            --bg-dark: #0a0a0a; /* Neutral 950 */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-color);
+        }
+
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fffbeb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: flex-end;
+            z-index: 100;
+            opacity: 0; /* Start hidden */
+            visibility: hidden; /* Start hidden */
+            transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+        }
+
+        .cart-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .cart-content {
+            background-color: var(--bg-light);
+            width: 100%;
+            max-width: 420px;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .cart-overlay.active .cart-content {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800 bg-amber-50">
+    <!-- Loading Screen -->
+    <div id="loading-indicator" class="loading-overlay">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="mt-4 text-xl font-medium text-amber-600">Loading Honey...</span>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div id="main-content" class="opacity-0 transition-opacity duration-1000">
+
+        <!-- Navigation Bar -->
+        <header class="bg-white shadow-lg sticky top-0 z-50 rounded-b-xl">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <a href="index.html" class="flex items-center space-x-3 text-amber-600">
+                    <img src="https://placehold.co/40x40/fcd34d/4b5563?text=H" alt="Honey Harvest Logo" class="h-10 w-10 rounded-full">
+                    <span class="text-2xl font-display font-bold">Honey Harvest</span>
+                </a>
+                
+                <!-- Right side: Desktop Menu + Cart/Mobile Button -->
+                <div class="flex items-center space-x-8">
+                    <!-- Desktop Menu -->
+                    <nav class="hidden lg:block">
+                        <ul class="flex space-x-8">
+                            <li><a href="#about" class="text-gray-600 hover:text-amber-500 font-medium transition duration-300">About Us</a></li>
+                            <li><a href="#products" class="text-gray-600 hover:text-amber-500 font-medium transition duration-300">Products</a></li>
+                            <li><a href="#blog" class="text-gray-600 hover:text-amber-500 font-medium transition duration-300">Blog</a></li>
+                            <li><a href="#contact" class="text-gray-600 hover:text-amber-500 font-medium transition duration-300">Contact</a></li>
+                        </ul>
+                    </nav>
+
+                    <!-- Cart & Mobile Menu Button -->
+                    <div class="flex items-center space-x-4">
+                        <button id="cart-button" class="relative text-amber-600 hover:text-amber-800 transition duration-300">
+                            <i class="fas fa-shopping-cart text-2xl"></i>
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                        </button>
+                        <button id="mobile-menu-button" class="text-gray-600 hover:text-amber-500 transition duration-300 lg:hidden">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="lg:hidden hidden bg-white shadow-lg rounded-b-xl">
+                <ul class="flex flex-col items-start py-4 space-y-4 px-6">
+                    <li><a href="#about" class="text-gray-600 hover:text-amber-500 font-medium block py-2 transition duration-300">About Us</a></li>
+                    <li><a href="#products" class="text-gray-600 hover:text-amber-500 font-medium block py-2 transition duration-300">Products</a></li>
+                    <li><a href="#blog" class="text-gray-600 hover:text-amber-500 font-medium block py-2 transition duration-300">Blog</a></li>
+                    <li><a href="#contact" class="text-gray-600 hover:text-amber-500 font-medium block py-2 transition duration-300">Contact</a></li>
+                </ul>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section id="hero" class="relative pt-20 pb-12 md:pt-40 md:pb-24 rounded-b-[40px] shadow-lg bg-cover bg-center" style="background-image: url('images/a.jpg');">
+            <!-- Overlay to ensure text readability -->
+            <div class="absolute inset-0 bg-amber-800 bg-opacity-60 rounded-b-[40px]"></div>
+            <div class="relative container mx-auto px-6 text-center text-white">
+                <h1 class="font-display text-3xl sm:text-4xl md:text-6xl font-extrabold leading-tight animate-fade-in-down">
+                    Pure & Natural Honey, Straight from the Hive
+                </h1>
+                <p class="mt-4 text-base sm:text-lg md:text-2xl max-w-3xl mx-auto opacity-90 animate-fade-in-up">
+                    Experience nature's liquid gold. Sustainably harvested with love and care for a taste you'll never forget.
+                </p>
+                <a href="#products" class="mt-8 inline-block bg-white text-amber-600 font-bold py-3 px-8 rounded-full shadow-lg hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+                    Explore Our Honey
+                </a>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row items-center gap-12">
+                    <div class="md:w-1/2">
+                        <img src="https://placehold.co/600x400/fcd34d/4b5563?text=Beekeeper" alt="Beekeeper at work" class="rounded-3xl shadow-xl">
+                    </div>
+                    <div class="md:w-1/2 text-center md:text-left">
+                        <h2 class="font-display text-3xl sm:text-4xl font-bold text-gray-800">Our Story</h2>
+                        <p class="mt-4 text-gray-600 leading-relaxed text-sm sm:text-base">
+                            Founded by a family of passionate beekeepers, Honey Harvest is a tribute to the humble bee and the pristine nature of our valleys. We've dedicated our lives to the art of beekeeping, ensuring every jar of honey is a testament to purity and quality.
+                        </p>
+                        <p class="mt-4 text-gray-600 leading-relaxed text-sm sm:text-base">
+                            Our mission is simple: to share nature's finest gifts with you while respecting the environment. We practice sustainable beekeeping, protecting our precious pollinators and the ecosystems they support.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Why Choose Our Honey Section -->
+        <section id="why-choose-us" class="py-16 bg-white">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-gray-800">Why Choose Our Honey?</h2>
+                <p class="mt-4 text-lg sm:text-xl text-gray-600">Our commitment to quality, purity, and your satisfaction.</p>
+                
+                <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Feature 1: 100% Natural -->
+                    <div class="p-4 sm:p-5 rounded-xl border border-gray-200 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-white">
+                        <div class="text-5xl sm:text-6xl text-amber-500 mb-2 sm:mb-4">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">100% Natural</h3>
+                        <p class="text-gray-600 text-xs sm:text-sm hidden md:block">Pure, raw, and unfiltered honey. No additives, no preservatives, just as nature intended.</p> <!-- Hidden on small screens -->
+                    </div>
+                    
+                    <!-- Feature 2: Premium Quality -->
+                    <div class="p-4 sm:p-5 rounded-xl border border-gray-200 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-white">
+                        <div class="text-5xl sm:text-6xl text-amber-500 mb-2 sm:mb-4">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Premium Quality</h3>
+                        <p class="text-gray-600 text-xs sm:text-sm hidden md:block">Sourced from the finest floral sources to ensure rich flavor, aroma, and nutritional value.</p> <!-- Hidden on small screens -->
+                    </div>
+                    
+                    <!-- Feature 3: Swift Delivery -->
+                    <div class="p-4 sm:p-5 rounded-xl border border-gray-200 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-white">
+                        <div class="text-5xl sm:text-6xl text-amber-500 mb-2 sm:mb-4">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Swift Delivery</h3>
+                        <p class="text-gray-600 text-xs sm:text-sm hidden md:block">Fast and reliable shipping to bring the goodness of our honey straight to your doorstep.</p> <!-- Hidden on small screens -->
+                    </div>
+                    
+                    <!-- Feature 4: Sustainably Sourced -->
+                    <div class="p-4 sm:p-5 rounded-xl border border-gray-200 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-white">
+                        <div class="text-5xl sm:text-6xl text-amber-500 mb-2 sm:mb-4">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2">Sustainably Sourced</h3>
+                        <p class="text-gray-600 text-xs sm:text-sm hidden md:block">We prioritize eco-friendly practices to protect our bees and the environment for future generations.</p> <!-- Hidden on small screens -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products" class="py-16 bg-amber-50">
+            <div class="container mx-auto px-4 max-w-7xl text-center">
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-gray-800">Our Exquisite Honey Collection</h2>
+                <p class="mt-4 text-lg sm:text-xl text-gray-600">Discover the unique flavors of our single-origin and infused honeys.</p>
+
+                <div id="product-list" class="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- Product cards will be injected here by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="py-16 bg-white">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-gray-800">What Our Customers Say</h2>
+                <p class="mt-4 text-lg sm:text-xl text-gray-600">Hear from those who love our honey as much as we do.</p>
+                <div class="relative mt-12 w-full max-w-5xl mx-auto">
+                    <div id="testimonial-slider-container" class="overflow-hidden rounded-3xl shadow-xl border border-gray-200">
+                        <div id="testimonial-slider" class="flex transition-transform duration-500 ease-in-out">
+                            <!-- Testimonial cards will be injected here by JavaScript -->
+                        </div>
+                    </div>
+                    <!-- Navigation Buttons -->
+                    <button id="prev-testimonial" class="absolute left-0 top-1/2 -translate-y-1/2 transform -translate-x-1/2 p-3 bg-white rounded-full shadow-lg text-amber-500 hover:text-amber-600 transition-colors duration-300">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button id="next-testimonial" class="absolute right-0 top-1/2 -translate-y-1/2 transform translate-x-1/2 p-3 bg-white rounded-full shadow-lg text-amber-500 hover:text-amber-600 transition-colors duration-300">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Blog Section -->
+        <section id="blog" class="py-16 bg-amber-50">
+            <div class="container mx-auto px-4 max-w-7xl text-center">
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-gray-800">Latest from the Blog</h2>
+                <p class="mt-4 text-lg sm:text-xl text-gray-600">Insights and stories from the world of bees and honey.</p>
+                <div id="blog-posts-container" class="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- Blog posts will be injected here by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-16 bg-amber-800 text-white">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">Get in Touch</h2>
+                <p class="mt-4 text-lg sm:text-xl text-amber-100">We'd love to hear from you. Reach out to us for any queries.</p>
+                <div class="mt-8 flex flex-col md:flex-row justify-center items-center gap-8">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-envelope text-amber-100 text-3xl"></i>
+                        <span class="text-base sm:text-lg text-amber-100">info@honeyharvest.com</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-phone-alt text-amber-100 text-3xl"></i>
+                        <span class="text-base sm:text-lg text-amber-100">+1 (555) 123-4567</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-white text-gray-800 py-12 rounded-t-[40px] shadow-lg">
+            <div class="container mx-auto px-4 text-center">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-4 md:mb-0">
+                        <h4 class="font-display text-base sm:text-xl md:text-2xl font-bold">Honey Harvest</h4> <!-- Adjusted font size for smaller screens -->
+                        <p class="text-xs sm:text-sm mt-2">© 2024 Honey Harvest. All rights reserved.</p> <!-- Adjusted font size for smaller screens -->
+                    </div>
+                    <div class="space-x-6">
+                        <a href="#about" class="text-gray-600 hover:text-amber-500 transition-colors duration-300 text-sm sm:text-base">About Us</a>
+                        <a href="#products" class="text-gray-600 hover:text-amber-500 transition-colors duration-300 text-sm sm:text-base">Products</a>
+                        <a href="#blog" class="text-gray-600 hover:text-amber-500 transition-colors duration-300 text-sm sm:text-base">Blog</a>
+                        <a href="#contact" class="text-gray-600 hover:text-amber-500 transition-colors duration-300 text-sm sm:text-base">Contact</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Cart Overlay -->
+        <div id="cart-overlay" class="cart-overlay hidden">
+            <div id="cart-content" class="cart-content p-6">
+                <div class="flex justify-between items-center pb-4 border-b border-gray-200">
+                    <h3 class="text-2xl font-display font-bold">Your Cart</h3>
+                    <button class="text-gray-500 hover:text-gray-800" onclick="closeCart()">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div id="cart-items" class="mt-4 space-y-4">
+                    <!-- Cart items will be injected here -->
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between items-center text-xl font-bold">
+                        <span>Total:</span>
+                        <span id="cart-total">Rs.0.00</span>
+                    </div>
+                    <button id="proceed-to-checkout-btn" class="w-full mt-4 bg-amber-500 text-white font-bold py-3 rounded-full hover:bg-amber-600 transition-colors duration-300">
+                        Proceed to Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const productsData = [
+                { id: 1, name: 'Wildflower Honey', price: 1935.00, originalPrice: 2250.00, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Wildflower', description: 'A rich, multi-floral blend with a sweet, classic honey flavor. Harvested from a variety of wildflowers, it captures the essence of a blooming meadow.', onSale: true },
+                { id: 2, name: 'Sidr Honey', price: 2967.00, originalPrice: 3450.00, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Sidr', description: 'A rare and prized honey from the Sidr tree, known for its unique taste and medicinal properties. It has a rich, buttery flavor and a dark, amber color.', onSale: true },
+                { id: 3, name: 'Acacia Honey', price: 2670.00, originalPrice: 2670.00, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Acacia', description: 'Light in color and mild in flavor, it is slow to crystallize and perfect for sweetening drinks or delicate pastries. Its gentle taste makes it a versatile pantry staple.', onSale: false },
+                { id: 4, name: 'Eucalyptus Honey', price: 1204.00, originalPrice: 1400.00, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Eucalyptus', description: 'A distinct, slightly medicinal taste, ideal for soothing coughs and colds. It has a strong aroma and a full-bodied flavor that is a favorite for wellness.', onSale: true },
+                { id: 5, name: 'Lavender Honey', price: 2299.00, originalPrice: 2799.00, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Lavender', description: 'Delicate and floral, harvested from bees that forage on lavender fields. This honey is perfect for drizzling over cheeses or adding to herbal teas for a calming effect.', onSale: false },
+                { id: 6, name: 'Manuka Honey', price: 3999.00, originalPrice: 4599.00, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Manuka', description: 'World-renowned for its powerful antibacterial properties and unique flavor. This is a premium honey known for its health benefits and thick, creamy texture.', onSale: true },
+                { id: 7, name: 'Forest Honey', price: 2099.00, originalPrice: 2399.00, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Forest', description: 'A dark, robust honey with hints of forest flora and a deep, earthy flavor. It is rich in minerals and has a bold taste that stands out.', onSale: false },
+                { id: 8, name: 'Clover Honey', price: 1499.00, originalPrice: 1699.00, image: 'https://placehold.co/400x400/fcd34d/4b5563?text=Clover', description: 'A light-colored, mild, and sweet honey, a perfect all-purpose choice for everyday use. Its classic, gentle flavor is beloved by all.', onSale: false }
+            ];
+
+            const blogPostsData = [
+                { id: 1, title: 'The Health Benefits of Raw Honey', excerpt: 'Discover the amazing health benefits packed into every spoonful of raw honey...', image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Honey+Health' },
+                { id: 2, title: 'A Day in the Life of a Beekeeper', excerpt: 'Follow us on our journey as we care for our buzzing friends and their hives...', image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Beekeeper' },
+                { id: 3, title: '5 Delicious Recipes with Honey', excerpt: 'From marinades to desserts, here are five ways to incorporate honey into your cooking...', image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Honey+Recipe' },
+                { id: 4, title: 'The Story Behind Our Sustainable Hives', excerpt: 'Learn about our commitment to sustainable beekeeping and protecting the environment...', image: 'https://placehold.co/600x600/fcd34d/4b5563?text=Sustainable+Hives' }
+            ];
+
+            const testimonialsData = [
+                { quote: "The Wildflower Honey is absolutely divine! Its floral notes make every cup of tea a special experience.", author: "Sarah L.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=SL", status: "Verified Buyer" },
+                { quote: "I've tried many different honeys, but the Sidr Honey from Honey Harvest is in a class of its own. Rich, dark, and incredibly flavorful.", author: "Michael P.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=MP", status: "Verified Buyer" },
+                { quote: "Honey Harvest's Acacia honey is so light and perfectly sweet. It's my go-to for baking and drizzling over my yogurt.", author: "Emily C.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=EC", status: "Verified Buyer" },
+                { quote: "Not only is the Manuka honey delicious, but I've also noticed a real difference in my health since I started using it. Highly recommend!", author: "David T.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=DT", status: "Verified Buyer" },
+                { quote: "The best part about Honey Harvest is their commitment to sustainable beekeeping. It feels good to support a company that cares about the environment.", author: "Jessica R.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=JR", status: "Verified Buyer" },
+                { quote: "I love the new Lavender Honey! It's so unique and adds a lovely flavor to my morning toast.", author: "Rachel K.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=RK", status: "New Customer" },
+                { quote: "The Forest Honey has a deep, earthy taste that's unlike anything I've had before. A great addition to my pantry.", author: "James B.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=JB", status: "Loyal Customer" },
+                { quote: "Great quality honey and fast shipping! I'll definitely be a repeat customer.", author: "Maria S.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=MS", status: "Verified Buyer" },
+                { quote: "I was looking for a healthier alternative to sugar and the Acacia honey is perfect. It's so light and doesn't overpower my tea.", author: "Alex F.", image: "https://placehold.co/80x80/fcd34d/4b5563?text=AF", status: "Verified Buyer" }
+            ];
+
+            // --- DOM ELEMENTS ---
+            const productList = document.getElementById('product-list');
+            const cartButton = document.getElementById('cart-button');
+            const cartCount = document.getElementById('cart-count');
+            const cartOverlay = document.getElementById('cart-overlay');
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            const proceedToCheckoutBtn = document.getElementById('proceed-to-checkout-btn'); 
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const blogPostsContainer = document.getElementById('blog-posts-container');
+            const testimonialSlider = document.getElementById('testimonial-slider');
+            const prevTestimonialBtn = document.getElementById('prev-testimonial');
+            const nextTestimonialBtn = document.getElementById('next-testimonial');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const mainContent = document.getElementById('main-content');
+
+            // --- STATE & DATA HANDLING ---
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let currentReviewIndex = 0; // Initialize currentReviewIndex
+
+            function saveCart() {
+                localStorage.setItem('cart', JSON.stringify(cart));
+            }
+
+            // --- FUNCTIONS ---
+            
+            // Product rendering function
+            function renderProductCards(container, data) {
+                container.innerHTML = data.map(product => {
+                    let priceDisplay;
+                    if (product.onSale && product.originalPrice) {
+                        priceDisplay = `
+                            <div class="flex flex-col items-center md:items-start whitespace-nowrap">
+                                <span class="text-sm text-gray-500 line-through">Rs.${product.originalPrice.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span class="text-xl md:text-2xl font-bold text-amber-600">Rs.${product.price.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </div>
+                        `;
+                    } else {
+                        priceDisplay = `<span class="text-xl md:text-2xl font-bold text-amber-600 whitespace-nowrap">Rs.${product.price.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+                    }
+
+                    const saleBadge = product.onSale ? `<span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">Sale</span>` : '';
+                    return `
+                        <div class="product-card bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl flex flex-col">
+                            ${saleBadge}
+                            <a href="product-details.html?id=${product.id}" class="flex-grow flex flex-col">
+                                <img src="${product.image}" alt="${product.name}" class="w-full object-cover aspect-square"> <!-- Always square image -->
+                                <div class="p-4 flex-grow flex flex-col justify-between">
+                                    <h3 class="font-display text-xl sm:text-2xl font-semibold text-gray-800 hidden md:block whitespace-nowrap">${product.name}</h3> <!-- Heading on desktop, one line -->
+                                    <p class="font-bold text-base sm:text-xl text-gray-800 block md:hidden whitespace-nowrap">${product.name}</p> <!-- Bold text on mobile, one line -->
+                                    <p class="mt-2 text-gray-600 text-xs sm:text-sm hidden md:block">${product.description.split('.')[0]}.</p> <!-- Hidden on small screens -->
+                                </div>
+                            </a>
+                            <div class="p-4 pt-0 flex justify-between items-center">
+                                ${priceDisplay}
+                                <button class="add-to-cart-btn bg-amber-500 text-white p-2 sm:p-3 rounded-full hover:bg-amber-600 transition-colors duration-300" data-id="${product.id}">
+                                    <i class="fas fa-plus text-base sm:text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Cart functions
+            function updateCartDisplay() {
+                cartItems.innerHTML = cart.map(item => `
+                    <div class="flex items-center space-x-4 p-4 bg-amber-50 rounded-lg shadow">
+                        <img src="${item.image}" alt="${item.name}" class="h-16 w-16 object-cover rounded-md">
+                        <div class="flex-grow">
+                            <h4 class="font-display text-lg font-semibold">${item.name}</h4>
+                            <p class="text-gray-600">${item.quantity} x Rs.${item.price.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <button class="remove-from-cart-btn text-red-500 hover:text-red-700" data-id="${item.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                cartTotal.textContent = `Rs.${total.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+                saveCart();
+            }
+
+            function openCart() {
+                cartOverlay.classList.remove('hidden');
+                setTimeout(() => {
+                    cartOverlay.classList.add('active');
+                }, 10);
+            }
+
+            function closeCart() {
+                cartOverlay.classList.remove('active');
+                setTimeout(() => {
+                    cartOverlay.classList.add('hidden');
+                }, 300);
+            }
+
+            function addToCart(productId, quantity) {
+                const product = productsData.find(p => p.id === productId);
+                if (!product) return;
+                
+                const existingItem = cart.find(item => item.id === product.id);
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    cart.push({ ...product, quantity: quantity });
+                }
+                updateCartDisplay();
+            }
+
+            // Generic message display function (replaces alert())
+            function displayMessage(title, message, type = 'info') {
+                const messageBox = document.createElement('div');
+                let bgColor = 'bg-blue-100';
+                let textColor = 'text-blue-800';
+                let buttonColor = 'bg-blue-500';
+
+                if (type === 'success') {
+                    bgColor = 'bg-green-100';
+                    textColor = 'text-green-800';
+                    buttonColor = 'bg-green-500';
+                } else if (type === 'warning') {
+                    bgColor = 'bg-yellow-100';
+                    textColor = 'text-yellow-800';
+                    buttonColor = 'bg-yellow-500';
+                } else if (type === 'error') {
+                    bgColor = 'bg-red-100';
+                    textColor = 'text-red-800';
+                    buttonColor = 'bg-red-500';
+                }
+
+                messageBox.className = `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${bgColor} ${textColor} p-6 rounded-xl shadow-2xl z-[200] text-center max-w-sm`;
+                messageBox.innerHTML = `
+                    <p class="text-xl font-bold mb-2">${title}</p>
+                    <p class="mt-2 text-gray-700">${message}</p>
+                    <button onclick="this.parentNode.remove()" class="mt-4 ${buttonColor} text-white py-2 px-5 rounded-full hover:${buttonColor.replace('500', '600')}">Close</button>
+                `;
+                document.body.appendChild(messageBox);
+            }
+
+
+            // Blog functions
+            function renderBlogPosts() {
+                blogPostsContainer.innerHTML = blogPostsData.map(post => `
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl flex flex-col">
+                        <a href="#" class="flex-grow flex flex-col">
+                            <img src="${post.image}" alt="${post.title}" class="w-full object-cover aspect-square"> <!-- Always square image -->
+                            <div class="p-4 flex-grow flex flex-col justify-between">
+                                <h3 class="font-display text-xl sm:text-2xl font-semibold text-gray-800 hidden md:block whitespace-nowrap">${post.title}</h3> <!-- Heading on desktop, one line -->
+                                <p class="font-bold text-base sm:text-xl text-gray-800 block md:hidden whitespace-nowrap">${post.title}</p> <!-- Bold text on mobile, one line -->
+                                <p class="mt-2 text-gray-600 text-xs sm:text-sm hidden md:block">${post.excerpt}</p> <!-- Hidden on small screens -->
+                            </div>
+                        </a>
+                        <div class="p-4 pt-0">
+                            <a href="#" class="inline-block text-amber-500 hover:text-amber-600 font-medium transition-colors duration-300 text-sm">Read More &rarr;</a>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Testimonial functions
+            function renderAllTestimonials() {
+                testimonialSlider.innerHTML = testimonialsData.map(testimonial => `
+                    <div class="testimonial-item flex-none w-full p-6 md:p-10 bg-white rounded-3xl">
+                        <!-- Quote Text -->
+                        <p class="text-base sm:text-xl font-display font-medium leading-tight text-gray-800 text-left">
+                            "${testimonial.quote}"
+                        </p>
+                        <!-- Author and Details -->
+                        <div class="mt-6 flex flex-col md:flex-row items-center justify-start gap-4">
+                            <img src="${testimonial.image}" alt="${testimonial.author}" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover shadow">
+                            <div class="text-left">
+                                <p class="font-display text-lg sm:text-xl font-bold text-gray-800">${testimonial.author}</p>
+                                <p class="text-xs sm:text-sm text-gray-500">${testimonial.status}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function showTestimonial(index) {
+                const totalTestimonials = testimonialsData.length;
+                if (index >= totalTestimonials) {
+                    currentReviewIndex = 0; // Loop back to the first testimonial
+                } else if (index < 0) {
+                    currentReviewIndex = totalTestimonials - 1; // Loop to the last testimonial
+                } else {
+                    currentReviewIndex = index;
+                }
+                testimonialSlider.style.transform = `translateX(-${currentReviewIndex * 100}%)`;
+            }
+
+            function nextTestimonial() {
+                showTestimonial(currentReviewIndex + 1);
+            }
+
+            function prevTestimonial() {
+                showTestimonial(currentReviewIndex - 1);
+            }
+
+            // --- EVENT LISTENERS ---
+            try {
+                // Event delegation for "Add to Cart" buttons
+                productList.addEventListener('click', (e) => {
+                    const addToCartBtn = e.target.closest('.add-to-cart-btn');
+                    if (addToCartBtn) {
+                        const productId = parseInt(addToCartBtn.dataset.id);
+                        addToCart(productId, 1);
+                    }
+                });
+
+                // Event delegation for cart items
+                cartItems.addEventListener('click', (e) => {
+                    const removeFromCartBtn = e.target.closest('.remove-from-cart-btn');
+                    if (removeFromCartBtn) {
+                        const productId = parseInt(removeFromCartBtn.dataset.id);
+                        cart = cart.filter(item => item.id !== productId);
+                        updateCartDisplay();
+                    }
+                });
+
+                // Event listeners for cart overlay
+                cartButton.addEventListener('click', openCart);
+                window.closeCart = closeCart; // Make closeCart globally accessible for the onclick in the HTML
+                
+                // NEW: Event listener for "Proceed to Checkout" button in cart - NOW REDIRECTS TO CHECKOUT.HTML
+                proceedToCheckoutBtn.addEventListener('click', () => {
+                    if (cart.length === 0) {
+                        displayMessage('Your cart is empty!', 'Please add some items before proceeding to checkout.', 'warning');
+                        return;
+                    }
+                    window.location.href = 'checkout.html';
+                });
+                
+                window.displayMessage = displayMessage; // Make globally accessible
+
+                // Event listener for mobile menu
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+                // Hide mobile menu when a link is clicked
+                mobileMenu.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+
+                // Event listeners for testimonial slider buttons
+                prevTestimonialBtn.addEventListener('click', prevTestimonial);
+                nextTestimonialBtn.addEventListener('click', nextTestimonial);
+
+                // --- INITIAL SETUP ---
+                
+                // Initial rendering of products and cart
+                renderProductCards(productList, productsData);
+                renderBlogPosts();
+                renderAllTestimonials();
+                updateCartDisplay();
+
+                // Check for order success message from checkout.html redirect
+                const urlParams = new URLSearchParams(window.location.search);
+                const orderSuccess = urlParams.get('orderSuccess');
+                const orderId = urlParams.get('orderId');
+                if (orderSuccess === 'true' && orderId) {
+                    displayMessage('Order Placed!', `Thank you for your order! Your Order ID: ${orderId}. We will contact you shortly to confirm details and arrange payment/delivery.`, 'success');
+                    // Remove the query parameters to prevent showing message on refresh
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+
+                // Smooth scrolling for anchor links
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const href = this.getAttribute('href');
+                        if (href.startsWith('#')) {
+                            document.querySelector(href).scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        } else {
+                            window.location.href = href;
+                        }
+                    });
+                });
+            } catch (error) {
+                // Log any errors that occur during the initial setup
+                console.error("An error occurred during page setup:", error);
+            } finally {
+                // Hide loading indicator and show main content after a brief delay
+                // This is placed in a finally block to ensure it always runs
+                setTimeout(() => {
+                    loadingIndicator.classList.add('hidden');
+                    mainContent.classList.remove('opacity-0');
+                }, 800);
+            }
+        });
+    </script>
+</body>
+</html>
