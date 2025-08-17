@@ -258,20 +258,21 @@
     </div>
 
     <!-- Supabase CDN and Custom Script -->
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+   <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm'; 
 
-        // --- IMPORTANT: REPLACE WITH YOUR ACTUAL SUPABASE PROJECT URL AND ANON KEY ---
-        // You can find these in your Supabase project settings -> API
-        const SUPABASE_URL = 'https://jfrthopnsikgqololays.supabase.co'; // e.g., 'https://abcde.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnRob3Buc2lrZ3FvbG9sYXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzNTY5NDksImV4cCI6MjA3MDkzMjk0OX0.d9rlGE8dELYP5Yw3LTPVH-qkAppRKy5l2Eold6dKgMM'; // This is the public 'anon' key
+    // --- IMPORTANT: REPLACE WITH YOUR ACTUAL SUPABASE PROJECT URL AND ANON KEY ---
+    // You can find these in your Supabase project settings -> API
+    const SUPABASE_URL = 'https://jfrthopnsikgqololays.supabase.co'; // <--- Copy YOUR Project URL here (e.g., from browser address bar)
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnRob3Buc2lrZ3FvbG9sYXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzNTY5NDksImV4cCI6MjA3MDkzMjk0OX0.d9rlGE8dELYP5Yw3LTPVH-qkAppRKy5l2Eold6dKgMM'; // <--- Copy the 'anon public' key from the screenshot here
 
-        if (SUPABASE_URL === 'YOUR_SUPABASE_PROJECT_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
-            console.error("Please replace 'YOUR_SUPABASE_PROJECT_URL' and 'YOUR_SUPABASE_ANON_KEY' with your actual Supabase credentials.");
-            alert("Supabase credentials not set up. Please check console for instructions.");
-        }
+    if (SUPABASE_URL === 'PASTE_YOUR_UNIQUE_PROJECT_URL_HERE' || SUPABASE_ANON_KEY === 'PASTE_YOUR_UNIQUE_ANON_KEY_HERE') {
+        console.error("Please replace 'PASTE_YOUR_UNIQUE_PROJECT_URL_HERE' and 'PASTE_YOUR_UNIQUE_ANON_KEY_HERE' with your actual Supabase credentials.");
+    }
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ... rest of your script
+</script>
 
         // --- DOM Elements ---
         const checkoutForm = document.getElementById('checkoutForm');
