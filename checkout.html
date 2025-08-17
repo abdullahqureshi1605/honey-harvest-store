@@ -258,21 +258,21 @@
     </div>
 
     <!-- Supabase CDN and Custom Script -->
-   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm'; 
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // --- IMPORTANT: REPLACE WITH YOUR ACTUAL SUPABASE PROJECT URL AND ANON KEY ---
-    // You can find these in your Supabase project settings -> API
-    const SUPABASE_URL = 'https://jfrthopnsikgqololays.supabase.co'; // <--- Copy YOUR Project URL here (e.g., from browser address bar)
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnRob3Buc2lrZ3FvbG9sYXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzNTY5NDksImV4cCI6MjA3MDkzMjk0OX0.d9rlGE8dELYP5Yw3LTPVH-qkAppRKy5l2Eold6dKgMM'; // <--- Copy the 'anon public' key from the screenshot here
+        // --- IMPORTANT: THESE ARE YOUR ACTUAL SUPABASE PROJECT URL AND ANON KEY ---
+        // These values have been inserted based on your previous messages.
+        const SUPABASE_URL = 'https://jfrthopnsikgqololays.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnRob3Buc2lrZ3FvbG9sYXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzNTY5NDksImV4cCI6MjA3MDkzMjk0OX0.d9rlGE8dELYP5Yw3LTPVH-qkAppRKy5l2Eold6dKgMM'; 
 
-    if (SUPABASE_URL === 'PASTE_YOUR_UNIQUE_PROJECT_URL_HERE' || SUPABASE_ANON_KEY === 'PASTE_YOUR_UNIQUE_ANON_KEY_HERE') {
-        console.error("Please replace 'PASTE_YOUR_UNIQUE_PROJECT_URL_HERE' and 'PASTE_YOUR_UNIQUE_ANON_KEY_HERE' with your actual Supabase credentials.");
-    }
+        // This check is now mainly for debugging if a user somehow puts incorrect values back.
+        if (SUPABASE_URL === 'YOUR_SUPABASE_PROJECT_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+            console.error("Supabase credentials are placeholders. Please update them with your actual project URL and key.");
+            // Replaced alert() with console.error as alerts can block execution in some environments.
+        }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    // ... rest of your script
-</script>
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- DOM Elements ---
         const checkoutForm = document.getElementById('checkoutForm');
@@ -398,7 +398,7 @@
             }
 
             if (cartItems.length === 0) {
-                alert('Your cart is empty. Please add items before placing an order.');
+                console.error('Your cart is empty. Please add items before placing an order.');
                 loadingIndicator.classList.add('hidden');
                 return;
             }
@@ -421,7 +421,6 @@
 
                     if (uploadError) {
                         console.error('Error uploading screenshot:', uploadError);
-                        alert('Error uploading screenshot. Please try again.');
                         loadingIndicator.classList.add('hidden');
                         return;
                     }
@@ -431,7 +430,6 @@
 
                 } catch (uploadException) {
                     console.error('Unexpected error during screenshot upload:', uploadException);
-                    alert('An unexpected error occurred during screenshot upload. Please try again.');
                     loadingIndicator.classList.add('hidden');
                     return;
                 }
@@ -467,7 +465,6 @@
 
                 if (error) {
                     console.error('Error saving order to Supabase:', error);
-                    alert('There was an error processing your order. Please try again.');
                 } else {
                     console.log('Order saved successfully:', data);
                     localStorage.removeItem('cart'); // Clear cart after successful order
@@ -475,7 +472,6 @@
                 }
             } catch (dbError) {
                 console.error('An unexpected error occurred during database insertion:', dbError);
-                alert('An unexpected error occurred. Please try again.');
             } finally {
                 loadingIndicator.classList.add('hidden'); // Hide loading indicator regardless of success/failure
             }
