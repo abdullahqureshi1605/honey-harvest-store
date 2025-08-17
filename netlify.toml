@@ -1,0 +1,12 @@
+# This file configures your Netlify site.
+# It tells Netlify how to build your site and deploy your functions.
+
+# Enable the plugin that automatically installs dependencies for Netlify Functions.
+# This is necessary when your package.json for functions is inside the netlify/functions directory.
+[[plugins]]
+package = "@netlify/plugin-functions-install-core"
+
+# [build] section (optional, but good to have if you need specific commands)
+# command = "npm run build" # If your frontend has a build step (e.g., React, Vue)
+# publish = "public"        # Directory Netlify should deploy (e.g., if you have a 'dist' or 'public' folder)
+# functions = "netlify/functions" # This is usually auto-detected, but can be explicit
