@@ -5,8 +5,9 @@ const { stringify } = require('csv-stringify'); // CSV stringify library
 // Initialize Supabase client
 // Get credentials from Netlify environment variables
 // IMPORTANT: These must be set in Netlify site settings -> Build & Deploy -> Environment
-const SUPABASE_URL = process.env.SUPABASE_URL; // Your Supabase Project URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // Your Supabase Service Role Key (secret!)
+// These lines correctly reference the environment variable NAMES:
+const SUPABASE_URL = process.env.SUPABASE_URL; // Correct way to access the URL
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // Correct way to access the Service Role Key
 
 // Use the SERVICE_ROLE_KEY for backend functions to bypass RLS and access all data.
 // This key must NEVER be exposed on the frontend. It's secure when used within Netlify Functions.
@@ -39,7 +40,7 @@ exports.handler = async (event) => {
         const { data: orders, error } = await supabase
             .from('orders')
             .select('*') // Select all columns from the orders table
-            .order('order_date', { ascending: false }); // Order by date, newest first
+            .order('created_at', { ascending: false }); // Order by date, newest first
 
         if (error) {
             console.error('Error fetching orders from Supabase:', error);
@@ -69,11 +70,11 @@ exports.handler = async (event) => {
             { key: 'customer_phno', header: 'Customer Phone' },
             { key: 'customer_address', header: 'Customer Address' },
             { key: 'total_amount', header: 'Total Amount' },
-            { key: 'payment_method', header: 'Payment Method' }, // New column
-            { key: 'transaction_id', header: 'Transaction ID' }, // New column
-            { key: 'transaction_screenshot_url', header: 'Screenshot URL' }, // New column
-            { key: 'product_details', header: 'Product Details (JSON)' }, // Product details will be stringified JSON
-            { key: 'order_date', header: 'Order Date' }
+            { key: 'payment_method', header: 'Payment Method' },
+            { key: 'transaction_id', header: 'Transaction ID' },
+            { key: 'transaction_screenshot_url', header: 'Screenshot URL' },
+            { key: 'product_details', header: 'Product Details (JSON)' },
+            { key: 'created_at', header: 'Order Date' } // Use created_at for order_date
         ];
 
         // 5. Prepare data: ensure JSON fields are stringified and dates are formatted
@@ -85,7 +86,7 @@ exports.handler = async (event) => {
             transaction_id: order.transaction_id || '',
             transaction_screenshot_url: order.transaction_screenshot_url || '',
             // Format order date for readability
-            order_date: new Date(order.order_date).toLocaleString() 
+            created_at: new Date(order.created_at).toLocaleString() // Use created_at
         }));
 
         // 6. Generate CSV string
