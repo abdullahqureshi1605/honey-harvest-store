@@ -296,7 +296,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-gray-700 text-white py-3 px-4 rounded-md font-semibold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2">
+                        <button type="submit" id="placeOrderButton" class="w-full bg-gray-700 text-white py-3 px-4 rounded-md font-semibold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2">
                             Place Order
                         </button>
                     </form>
@@ -324,12 +324,15 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        // --- IMPORTANT: THESE ARE YOUR ACTUAL SUPABASE PROJECT URL AND ANON KEY ---
-        // These values have been inserted based on your previous messages.
+        // --- IMPORTANT: REPLACE WITH YOUR ACTUAL SUPABASE PROJECT URL AND ANON KEY ---
+        // You can find these in your Supabase project settings -> API
         const SUPABASE_URL = 'https://jfrthopnsikgqololays.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnRob3Buc2lrZ3FvbG9sYXlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzNTY5NDksImV4cCI6MjA3MDkzMjk0OX0.d9rlGE8dELYP5Yw3LTPVH-qkAppRKy5l2Eold6dKgMM'; 
 
-        // --- Message Modal Elements ---
+        // Initialize Supabase client immediately (no auth needed here)
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Message Modal Elements
         const messageModalOverlay = document.getElementById('messageModalOverlay');
         const messageModalContent = document.getElementById('messageModalContent');
         const messageModalTitle = document.getElementById('messageModalTitle');
@@ -351,16 +354,15 @@
         });
 
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         // --- DOM Elements ---
         const checkoutForm = document.getElementById('checkoutForm');
         const checkoutItemsContainer = document.getElementById('checkout-items');
         const subtotalDisplay = document.getElementById('subtotalDisplay');
-        const totalAmountDisplay = document.getElementById('totalAmountDisplay'); // Removed shippingDisplay
+        const totalAmountDisplay = document.getElementById('totalAmountDisplay'); 
         const cartCountSpan = document.getElementById('cart-count');
         const loadingIndicator = document.getElementById('loadingIndicator');
         const mainContent = document.getElementById('mainContent');
+        // No longer need to get placeOrderButton as disabled state is removed
 
         // Payment method specific elements
         const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
@@ -395,7 +397,7 @@
             if (cartCountSpan) {
                 cartCountSpan.textContent = totalItems;
             }
-            if (cartCountMobileSpan) { // Update mobile cart count
+            if (cartCountMobileSpan) { 
                 cartCountMobileSpan.textContent = totalItems;
             }
         }
@@ -428,7 +430,6 @@
                 });
             }
 
-            // Shipping is removed, so total is just subtotal
             const total = subtotal; 
 
             subtotalDisplay.textContent = `$${subtotal.toFixed(2)}`;
@@ -437,13 +438,13 @@
 
         // --- PAYMENT METHOD DISPLAY LOGIC ---
         function updatePaymentDetailsDisplay() {
-            const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value; // Correct variable name
+            const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value; 
             bankDetailsSection.style.display = 'none';
             easyPaisaSection.style.display = 'none';
 
-            if (selectedPaymentMethod === 'bank') { // Corrected variable name
+            if (selectedPaymentMethod === 'bank') { 
                 bankDetailsSection.style.display = 'block';
-            } else if (selectedPaymentMethod === 'easypaisa') { // Corrected variable name
+            } else if (selectedPaymentMethod === 'easypaisa') { 
                 easyPaisaSection.style.display = 'block';
             }
         }
@@ -456,16 +457,16 @@
             loadingIndicator.classList.remove('hidden'); // Show loading indicator
 
             const fullName = document.getElementById('fullName').value;
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const address = document.getElementById('address').value;
+            const email = document.getElementById('email').value; 
+            const phone = document.getElementById('phone').value; 
+            const address = document.getElementById('address').value; 
             const totalAmount = parseFloat(totalAmountDisplay.textContent.replace('$', ''));
             const cartItems = getCart();
             const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
             let transactionId = null;
             let screenshotFile = null;
-            let screenshotUrl = null; // To store the URL of the uploaded screenshot
+            let screenshotUrl = null; 
 
             // Get payment method specific data
             if (selectedPaymentMethod === 'bank') {
@@ -485,17 +486,15 @@
             // Upload screenshot if available
             if (screenshotFile) {
                 const fileExtension = screenshotFile.name.split('.').pop();
-                // Ensure unique filename
                 const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
                 const filePath = `transaction-screenshots/${fileName}`;
 
                 try {
-                    // Upload the file to Supabase Storage
                     const { data: uploadData, error: uploadError } = await supabase.storage
-                        .from('transaction-screenshots') // Your storage bucket name
+                        .from('transaction-screenshots') 
                         .upload(filePath, screenshotFile, {
-                            cacheControl: '3600', // Cache for 1 hour
-                            upsert: false, // Do not overwrite existing files
+                            cacheControl: '3600', 
+                            upsert: false, 
                         });
 
                     if (uploadError) {
@@ -504,7 +503,6 @@
                         loadingIndicator.classList.add('hidden');
                         return;
                     }
-                    // Get the public URL of the uploaded file
                     screenshotUrl = supabase.storage.from('transaction-screenshots').getPublicUrl(filePath).data.publicUrl;
                     console.log('Screenshot uploaded:', screenshotUrl);
 
@@ -515,7 +513,12 @@
                     return;
                 }
             }
-
+            
+            // In this setup without RLS, user_id will default to null in the database
+            // if the column default is removed or auth.uid() isn't used.
+            // If you still have user_id with DEFAULT auth.uid(), it will try to set it,
+            // but if RLS is OFF, the insert will go through anyway.
+            const userId = null; // No active user session in this simplified setup
 
             // Prepare product_details as a JSON array of objects
             const productDetails = cartItems.map(item => ({
@@ -526,41 +529,44 @@
             }));
 
             try {
-                // Insert order into Supabase database
+                // Modified INSERT statement - user_id will be null or default based on DB schema
                 const { data, error } = await supabase
                     .from('orders')
                     .insert([
                         {
+                            user_id: userId, // Will be null in this setup
                             customer_name: fullName,
-                            customer_email: email,
-                            customer_phno: phone,
-                            customer_address: address, // This should map to customer_address
+                            customer_email: email, 
+                            customer_phno: phone,  
                             total_amount: totalAmount,
-                            payment_method: selectedPaymentMethod, // Save selected payment method
-                            transaction_id: transactionId,       // Save transaction ID
-                            transaction_screenshot_url: screenshotUrl, // Save screenshot URL
-                            product_details: productDetails 
+                            customer_address: address, 
+                            product_details: productDetails, 
+                            payment_status: 'pending', 
+                            shipping_status: 'processing', 
+                            payment_method: selectedPaymentMethod, 
+                            transaction_id: transactionId,       
+                            transaction_screenshot_url: screenshotUrl 
                         }
                     ])
-                    .select(); // Use .select() to return the inserted data
+                    .select(); 
 
                 if (error) {
                     console.error('Error saving order to Supabase:', error);
                     showMessageModal(`Failed to place order: ${error.message || 'Unknown error'}. Please try again.`, true);
                 } else {
                     console.log('Order saved successfully:', data);
-                    localStorage.removeItem('cart'); // Clear cart after successful order
-                    // Optionally show a success message before redirecting
-                    showMessageModal('Order placed successfully! Redirecting...', false); // isError = false for success
+                    localStorage.removeItem('cart'); 
+                    // CORRECTED REDIRECT LINK HERE 👇
+                    showMessageModal('Order placed successfully! Redirecting...', false); 
                     setTimeout(() => {
-                        window.location.href = 'thank-you.html?order_success=true'; // Redirect to thank you page
-                    }, 2000); // Give user 2 seconds to see success message
+                        window.location.href = 'thank-you.html?order_success=true'; 
+                    }, 2000); 
                 }
             } catch (dbError) {
                 console.error('An unexpected error occurred during database insertion:', dbError);
                 showMessageModal(`An unexpected error occurred: ${dbError.message || 'Unknown error'}. Please try again.`, true);
             } finally {
-                loadingIndicator.classList.add('hidden'); // Hide loading indicator regardless of success/failure
+                loadingIndicator.classList.add('hidden'); 
             }
         });
 
@@ -579,11 +585,10 @@
             try {
                 renderCheckoutSummary();
                 updateCartDisplay();
-                updatePaymentDetailsDisplay(); // Initialize display based on default checked radio
+                updatePaymentDetailsDisplay(); 
             } catch (error) {
                 console.error("An error occurred during page setup:", error);
             } finally {
-                // Hide loading indicator and show main content after a brief delay
                 setTimeout(() => {
                     loadingIndicator.classList.add('hidden');
                     mainContent.classList.remove('opacity-0');
