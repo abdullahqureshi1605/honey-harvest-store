@@ -514,12 +514,6 @@
                 }
             }
             
-            // In this setup without RLS, user_id will default to null in the database
-            // if the column default is removed or auth.uid() isn't used.
-            // If you still have user_id with DEFAULT auth.uid(), it will try to set it,
-            // but if RLS is OFF, the insert will go through anyway.
-            const userId = null; // No active user session in this simplified setup
-
             // Prepare product_details as a JSON array of objects
             const productDetails = cartItems.map(item => ({
                 id: item.id,
@@ -529,20 +523,17 @@
             }));
 
             try {
-                // Modified INSERT statement - user_id will be null or default based on DB schema
+                // Simplified INSERT statement with only the requested fields
                 const { data, error } = await supabase
                     .from('orders')
                     .insert([
                         {
-                            user_id: userId, // Will be null in this setup
                             customer_name: fullName,
                             customer_email: email, 
                             customer_phno: phone,  
                             total_amount: totalAmount,
                             customer_address: address, 
                             product_details: productDetails, 
-                            payment_status: 'pending', 
-                            shipping_status: 'processing', 
                             payment_method: selectedPaymentMethod, 
                             transaction_id: transactionId,       
                             transaction_screenshot_url: screenshotUrl 
@@ -556,7 +547,6 @@
                 } else {
                     console.log('Order saved successfully:', data);
                     localStorage.removeItem('cart'); 
-                    // CORRECTED REDIRECT LINK HERE 👇
                     showMessageModal('Order placed successfully! Redirecting...', false); 
                     setTimeout(() => {
                         window.location.href = 'thank-you.html?order_success=true'; 

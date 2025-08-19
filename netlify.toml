@@ -10,3 +10,4 @@ package = "@netlify/plugin-functions-install-core"
 # command = "npm run build" # If your frontend has a build step (e.g., React, Vue)
 # publish = "public"        # Directory Netlify should deploy (e.g., if you have a 'dist' or 'public' folder)
 # functions = "netlify/functions" # This is usually auto-detected, but can be explicit
+
